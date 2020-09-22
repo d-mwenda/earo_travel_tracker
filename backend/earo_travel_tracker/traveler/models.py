@@ -4,6 +4,19 @@ Data models for the traveler app are defined in this file.
 from django.db import models
 from django.conf import settings
 
+
+class DepartmentsModel(models.Model):
+    """
+    This class will implement departments model in the organization. This can also be
+    functional units as my be appropriate for intents and purposes of this software.
+    """
+    department = models.CharField(max_length=50, null=False, blank=False, db_index=True)
+    description = models.CharField(max_length=200, null=False, blank=False)
+
+    def __str__(self):
+        return self.department
+
+
 class TravelerDetails(models.Model):
     """
     This model defines details of travelers. They can be employees, dependants of employees,
