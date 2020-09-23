@@ -1,0 +1,53 @@
+# System / Log files
+*.DS_Store
+*.log
+
+# Archives
+*.zip
+
+# Sass Cache
+.sass-cache
+
+# Project files
+.idea
+nbproject
+nbproject/private
+.vscode/
+.vs/
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
+
+# Node / Bower
+**/node_modules/3
+bower_components/
+
+# Python bytecode
+*.pyc
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# compiled output
+/dist
+/tmp
+/out-tsc

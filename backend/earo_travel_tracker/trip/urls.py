@@ -1,7 +1,7 @@
 """
 All url mappings for the trip app are defined here
 """
-
+from django.urls import path
 # Third party app imports
 from rest_framework import routers
 # Earo_travel_tracker imports
@@ -17,3 +17,8 @@ router.register(r'trip-approval', TripApprovalViewSet)
 router.register(r'trip-itinerary', TripItineraryViewSet)
 router.register(r'trip-approver-groups', ApproverGroupsViewSet)
 api_url_patterns = router.urls
+
+
+urlpatterns = [
+    
+]

@@ -17,10 +17,21 @@ from django.contrib import admin
 from django.urls import path, include
 # Earo_travel_tracker imports
 from traveler.urls import api_url_patterns as traveler_api
+from traveler.urls import urlpatterns as traveler
 from trip.urls import api_url_patterns as trip_api
+from trip.urls import urlpatterns as trip
 
+
+# url patterns for restful APIs
+api_urlpatterns = [
+    path('traveler/', include(traveler_api)),
+    path('trip/', include(trip_api)),
+]
+
+# All url patterns
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('traveler/', include(traveler_api)),
-    path('trip/', include(trip_api))
+    path('api/', include(api_urlpatterns)),
+    path('traveler/', include(traveler)),
+    path('trip/', include(trip)),
 ]
