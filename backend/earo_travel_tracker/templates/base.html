@@ -1,4 +1,5 @@
 {% load static %}
+{% load widget_tweaks %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -105,34 +106,65 @@
           <!-- Add icons to the links using the .nav-icon class
                with font-awesome or any other icon font library -->
           <li class="nav-item">
-            <a href="#" class="nav-link active">
+            <a href="#" class="nav-link">
               <i class="nav-icon fas fa-tachometer-alt"></i>
               <p>
-                Travelers Register
+                Manage Travelers
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
                 <a href="#" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Traveler</p>
+                  <i class="fa fa-users"></i>
+                  <p>Travelers</p>
+                  <i class="right fas fa-angle-left"></i>
                 </a>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item">
+                    <a href="{% url 'u_create_traveler' %}" class="nav-link">
+                      <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
+                      <p>Add Traveler</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'u_list_travelers' %}" class="nav-link">
+                      <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
+                      <p>Travelers Register</p>
+                    </a>
+                  </li>
+                </ul>
               </li>
+              
               <li class="nav-item">
                 <a href="#" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>New Trip</p>
+                  <i class="fa fa-sitemap" aria-hidden="true"></i>
+                  <p>Departments</p>
+                  <i class="right fas fa-angle-left"></i>
                 </a>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item">
+                    <a href="{% url 'u_create_department' %}" class="nav-link">
+                      <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
+                      <p>Add Deparment</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'u_list_departments' %}" class="nav-link">
+                      <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
+                      <p>Department Register</p>
+                    </a>
+                  </li>
+                </ul>
               </li>
             </ul>
           </li>
           <!-- Trips -->
           <li class="nav-item">
             <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-tachometer-alt"></i>
+              <i class="nav-icon fas fa fa-plane"></i>
               <p>
-                Trips
+                Manage Trips
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -165,12 +197,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0 text-dark">Page Title</h1>
+            <h1 class="m-0 text-dark">{{page_title}}</h1>
           </div><!-- /.col -->
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item active">Page Title</li>
+              <li class="breadcrumb-item active">{{page_title}}</li>
             </ol>
           </div><!-- /.col -->
         </div><!-- /.row -->
@@ -181,7 +213,7 @@
     <!-- Main content -->
     <div class="content">
       <div class="container-fluid">
-        <div class="row">
+        <div class="row  justify-content-center">
           {% block content %}
           {% endblock content %}
         </div>

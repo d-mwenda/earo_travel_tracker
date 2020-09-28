@@ -20,5 +20,10 @@ api_url_patterns = router.urls
 
 
 urlpatterns = [
-    
+    path('trips', TripViewSet),
+    path('trip-traveler-dependants', TripTravelerDependantsViewSet),
+    path('trip-expenses', TripExpensesViewSet),
+    path('trip-approval', TripApprovalViewSet),
+    path('trip-itinerary', TripItineraryViewSet),
+    path('trip-approver-groups', ApproverGroupsViewSet),
 ]

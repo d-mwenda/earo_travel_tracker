@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Third party apps
     'rest_framework',
+    'widget_tweaks',
     # Earo-travel_tracker apps
     'traveler',
     'trip',
