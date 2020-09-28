@@ -53,4 +53,4 @@ testem.log
 /out-tsc
 
 # Sqlite
-*db.sqlite
+*db.sqlite3
