@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="col-md-5 col-lg-4">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+            {{trip.trip_name}} Trip Details
+        </h3>
+        <span class="float-right">
+          <a href="{% url 'u_update_trip' trip_id=trip.id %}" class="btn btn-secondary right">Modify trip</a>
+        </span>
+      </div>
+      <!-- /.card-header -->
+      <div class="card-body">
+        <dl class="row">
+          <dt class="col-sm-4">Start date</dt>
+          <dd class="col-sm-8 text-right">{{trip.start_date}}</dd>
+          <dt class="col-sm-4">End date</dt>
+          <dd class="col-sm-8 text-right">{{trip.end_date}}</dd>
+          <dt class="col-sm-4">Type of travel</dt>
+          <dd class="col-sm-8 text-right">{{trip.type_of_travel}}</dd>
+          <dt class="col-sm-4">Category of Travel</dt>
+          <dd class="col-sm-8 text-right">{{trip.category_of_travel}}</dd>
+          <dt class="col-sm-4">Mode of Travel</dt>
+          <dd class="col-sm-8 text-right">{{trip.mode_of_travel}}</dd>
+          <dt class="col-sm-4">Reason for Travel</dt>
+          <dd class="col-sm-8 text-right">{{trip.reason_for_travel}}</dd>
+          <dt class="col-sm-4">Start date</dt>
+          <dd class="col-sm-8 text-right">{{trip.start_date}}</dd>
+          <dt class="col-sm-4">Is trip mission critical?</dt>
+          <dd class="col-sm-8 text-right">{% if trip.is_mission_critical %} Yes {% else %} No {% endif %}</dd>
+        </dl>
+      </div>
+      <!-- /.card-body -->
+      <div class="card-footer">
+        <p>
+            Happy with the trip details?
+            {% if itinerary %}
+            <a href="" class="btn btn-secondary float-right">Submit trip for approval</a>
+            {% else %}
+            <a href="{% url 'u_create_trip_itinerary' %}" class="btn btn-secondary float-right">Now add your itinerary</a>
+            {% endif %}
+        </p>
+      </div>
+    </div>
+    <!-- /.card -->
+  </div>
+  {% if itinerary %}
+  <div class="col-md-7 col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    Trip Itinerary
+                </h3>
+                <span class="float-right">
+                    <a href="" class="btn btn-secondary right">Add a trip leg</a>
+                </span>
+            </div>
+            <!-- /.card-header-->
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-nowrap">
+                  <thead>
+                    <tr>
+                      <th>Leg</th>
+                      <th>Mode of Travel</th>
+                      <th>Date of departure</th>
+                      <th>Time of departure</th>
+                      <th>Leg status</th>
+                      <th>Comment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for leg in itinerary %}
+                    <tr>
+                        <td>{{leg.city_of_departure}} - {{leg.destination}}<a href="{% url 'u_update_trip_itinerary' leg_id=leg.id %}">&nbsp;&nbsp;edit Leg</a></td>
+                        <td>{{leg.mode_of_travel}}</td>
+                        <td>{{leg.date_of_departure}}</td>
+                        <td>{{leg.time_of_departure}}</td>
+                        <td>{{leg.leg_status}}</td>
+                        <td>{% if leg.comment %}{{leg.comment}}{% else %}&nbsp;----------&nbsp;{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <!-- /.card-body -->
+        </div> 
+  </div>
+  <!-- /.card -->
+  {% endif %}
+
+{% endblock content %}

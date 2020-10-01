@@ -2,7 +2,6 @@
 This file provides all view functionality for the traveler app.
 """
 from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
-from django.urls import reverse_lazy
 # Third party apps imports
 from rest_framework import viewsets
 # Earo_travel_tracker imports

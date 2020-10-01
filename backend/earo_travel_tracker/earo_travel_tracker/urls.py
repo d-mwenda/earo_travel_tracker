@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 # Earo_travel_tracker imports
 from traveler.urls import api_url_patterns as traveler_api
 from traveler.urls import urlpatterns as traveler
@@ -34,4 +35,6 @@ urlpatterns = [
     path('api/', include(api_urlpatterns)),
     path('traveler/', include(traveler)),
     path('trip/', include(trip)),
+    # Temporary redirect for domain root
+    path('', RedirectView.as_view(pattern_name='u_create_trip')),
 ]
