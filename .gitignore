@@ -54,3 +54,6 @@ testem.log
 
 # Sqlite
 *db.sqlite3
+
+# Application files
+*secret_settings.py

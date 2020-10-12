@@ -2,6 +2,8 @@
 This file provides all view functionality for the traveler app.
 """
 from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+
 # Third party apps imports
 from rest_framework import viewsets
 # Earo_travel_tracker imports
@@ -29,7 +31,7 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
 # classes below are Non-API views
 # Department
-class DepartmentCreateView(CreateView):
+class DepartmentCreateView(LoginRequiredMixin, CreateView):
     """
     Creating new departments.
     """
@@ -41,7 +43,7 @@ class DepartmentCreateView(CreateView):
     }
 
 
-class DepartmentListView(ListView):
+class DepartmentListView(LoginRequiredMixin, ListView):
     """
     View all departments.
     """
@@ -53,7 +55,7 @@ class DepartmentListView(ListView):
     }
 
 
-class DepartmentDetailView(DetailView):
+class DepartmentDetailView(LoginRequiredMixin, DetailView):
     """
     View all departments.
     """
@@ -66,7 +68,7 @@ class DepartmentDetailView(DetailView):
     }
 
 
-class DepartmentUpdateView(UpdateView):
+class DepartmentUpdateView(LoginRequiredMixin, UpdateView):
     """
     View all departments.
     """
@@ -81,7 +83,7 @@ class DepartmentUpdateView(UpdateView):
     }
 
 
-class DepartmentDeleteView(DeleteView):
+class DepartmentDeleteView(LoginRequiredMixin, DeleteView):
     """
     View all departments.
     """
@@ -89,7 +91,7 @@ class DepartmentDeleteView(DeleteView):
 
 
 # Travelers
-class TravelerCreateView(CreateView):
+class TravelerCreateView(LoginRequiredMixin, CreateView):
     """
     Add new travelers.
     """
@@ -101,7 +103,7 @@ class TravelerCreateView(CreateView):
     }
 
 
-class TravelerListView(ListView):
+class TravelerListView(LoginRequiredMixin, ListView):
     """
     View all registered travelers.
     """
@@ -113,7 +115,7 @@ class TravelerListView(ListView):
     }
 
 
-class TravelerDetailView(DetailView):
+class TravelerDetailView(LoginRequiredMixin, DetailView):
     """
     View a travelers profile.
     """
@@ -126,7 +128,7 @@ class TravelerDetailView(DetailView):
     }
 
 
-class TravelerUpdateView(UpdateView):
+class TravelerUpdateView(LoginRequiredMixin, UpdateView):
     """
     View a travelers profile.
     """
@@ -140,7 +142,7 @@ class TravelerUpdateView(UpdateView):
     }
 
 
-class TravelerDeleteView(DetailView):
+class TravelerDeleteView(LoginRequiredMixin, DetailView):
     """
     View a travelers profile.
     """

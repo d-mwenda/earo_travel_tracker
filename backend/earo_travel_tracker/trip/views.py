@@ -3,6 +3,8 @@ All views for the trip app are implemented here.
 """
 from django.views.generic import CreateView, UpdateView, DetailView, DeleteView, ListView
 from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+
 # Third party imports
 from rest_framework import viewsets
 # Earo_travel_tracker imports
@@ -64,7 +66,7 @@ class ApproverGroupsViewSet(viewsets.ModelViewSet):
 
 # Non-API views
 # Trip
-class TripCreateView(CreateView):
+class TripCreateView(LoginRequiredMixin, CreateView):
     """
     This class implements the create view for the Trip model.
     """
@@ -77,7 +79,7 @@ class TripCreateView(CreateView):
     }
 
 
-class TripUpdateView(UpdateView):
+class TripUpdateView(LoginRequiredMixin, UpdateView):
     """
     This class implements the update view for the Trip model.
     """
@@ -91,7 +93,7 @@ class TripUpdateView(UpdateView):
     }
 
 
-class TripDetailView(DetailView):
+class TripDetailView(LoginRequiredMixin, DetailView):
     """
     This class implements the details view for the Trip model.
     """
@@ -121,7 +123,7 @@ class TripDetailView(DetailView):
         return context
 
 
-class TripListView(ListView):
+class TripListView(LoginRequiredMixin, ListView):
     """
     This class implements the listing view for the Trip model.
     """
@@ -134,7 +136,7 @@ class TripListView(ListView):
     }
 
 
-class TripDeleteView(DeleteView):
+class TripDeleteView(LoginRequiredMixin, DeleteView):
     """
     This class implements the delete view for the Trip model.
     """
@@ -146,7 +148,7 @@ class TripDeleteView(DeleteView):
 
 
 # Trip Itinerary
-class TripItineraryCreateView(CreateView):
+class TripItineraryCreateView(LoginRequiredMixin, CreateView):
     """
     This class implements the create view for the TripItinerary model.
     """
@@ -162,7 +164,7 @@ class TripItineraryCreateView(CreateView):
     # success_url = reverse_lazy('u_trip_details', kwargs={'trip_id': 1})
 
 
-class TripItineraryUpdateView(UpdateView):
+class TripItineraryUpdateView(LoginRequiredMixin, UpdateView):
     """
     This class implements the update view for the TripItinerary model.
     """
@@ -174,7 +176,7 @@ class TripItineraryUpdateView(UpdateView):
         'page_title': 'Edit Trip Itinerary'
     }
 
-class TripItineraryListView(ListView):
+class TripItineraryListView(LoginRequiredMixin, ListView):
     """
     This class implements the listing view for the TripItinerary model.
     """
@@ -187,7 +189,7 @@ class TripItineraryListView(ListView):
     }
 
 
-class TripItineraryDeleteView(DeleteView):
+class TripItineraryDeleteView(LoginRequiredMixin, DeleteView):
     """
     This class implements the delete view for the Trip model.
     """

@@ -35,6 +35,7 @@ urlpatterns = [
     path('api/', include(api_urlpatterns)),
     path('traveler/', include(traveler)),
     path('trip/', include(trip)),
+    path('accounts/', include('django.contrib.auth.urls')),
     # Temporary redirect for domain root
     path('', RedirectView.as_view(pattern_name='u_create_trip')),
 ]
