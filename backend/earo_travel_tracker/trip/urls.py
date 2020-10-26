@@ -5,11 +5,12 @@ from django.urls import path
 # Third party app imports
 from rest_framework import routers
 # Earo_travel_tracker imports
-from .views import TripViewSet, TripTravelerDependantsViewSet, TripExpensesViewSet,\
-    TripApprovalViewSet, TripItineraryViewSet, ApproverGroupsViewSet, TripCreateView,\
-    TripDetailView, TripUpdateView, TripDeleteView, TripListView, TripItineraryListView,\
-    TripItineraryCreateView, TripItineraryUpdateView, TripItineraryDeleteView
-
+from .views import (
+    TripViewSet, TripTravelerDependantsViewSet, TripExpensesViewSet, TripApprovalViewSet,
+    TripItineraryViewSet, ApproverGroupsViewSet, TripCreateView, TripDetailView, TripUpdateView,
+    TripDeleteView, TripListView, TripItineraryListView, TripItineraryCreateView,
+    TripItineraryUpdateView, TripItineraryDeleteView, ApproveTripView, TripApprovalListView
+    )
 
 router = routers.SimpleRouter()
 router.register(r'trips', TripViewSet)
@@ -24,8 +25,9 @@ api_url_patterns = router.urls
 urlpatterns = [
     # trips
     path('new-trip', TripCreateView.as_view(), name='u_create_trip'),
-    path('list-trips/ongoing', TripListView.as_view(), name='u_list_ongoing_trips'),
-    path('list-trips/upcoming', TripListView.as_view(), name='u_list_upcoming_trips'),
+    path('list-trips/ongoing', TripApprovalListView.as_view(),  {'filter_by': 'ongoing'}, name='u_list_ongoing_trips'),
+    path('list-trips/upcoming', TripApprovalListView.as_view(), {'filter_by': 'upcoming'}, name='u_list_upcoming_trips'),
+    path('list-trips/awaiting-approval', TripApprovalListView.as_view(), {'filter_by': 'awaiting_approval'}, name='u_list_awaiting_approval_trips'),
     path('update-trip/trip=<trip_id>', TripUpdateView.as_view(), name='u_update_trip'),
     path('trip-details/trip=<trip_id>', TripDetailView.as_view(), name='u_trip_details'),
     path('delete-trip', TripDeleteView.as_view(), name='u_delete_trip'),
@@ -43,7 +45,7 @@ urlpatterns = [
     path('trip-traveler-dependants', TripTravelerDependantsViewSet),
     path('trip-expenses', TripExpensesViewSet),
     # trip approval
-    path('trip-approval', TripApprovalViewSet),
+    path('trip-approval/approval_request=<approval_id>', ApproveTripView.as_view(), name='u_approve_trip'),
     # trip approver groups
     path('trip-approver-groups', ApproverGroupsViewSet),
 ]

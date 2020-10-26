@@ -54,7 +54,10 @@ class TravelerDetails(models.Model):
     user_account = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete= models.CASCADE,
                             blank=True, null=True)
     is_managed_by = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True,
-                                    db_index=True, verbose_name="Line Manager",related_name='Line_Manager')
+                                    db_index=True, verbose_name="Line Manager",
+                                    related_name='Line_Manager')
+    approver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, blank=True,
+                                null=True, related_name='trip_approver')
 
     def __str__(self):
         return ", ".join([self.last_name, self.first_name])

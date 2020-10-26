@@ -12,7 +12,6 @@ class Trips(models.Model):
     """
     This class implements the data model for all trips taken.
     """
-    # TODO Implement a method to create a new approval instance whenever every trip is created.
     TRAVEL_CATEGORIES = (
         ('Business', 'Business'),
         ('Home Leave', 'Home Leave'),
@@ -35,9 +34,9 @@ class Trips(models.Model):
     )
 
     trip_name = models.CharField(max_length=200, blank=False, null=False, db_index=True,
-                                help_text="""In less than 200 characters give your trip a descriptive
+                                help_text="""In at most 200 characters give your trip a descriptive
                                 title""")
-    traveler = models.ForeignKey(TravelerDetails, on_delete=models.CASCADE, null=False, blank=False)
+    traveler = models.ForeignKey(TravelerDetails, on_delete=models.CASCADE, null=False, blank=True)
     type_of_travel = models.CharField(max_length=15, null=False, blank=False, choices=TRAVEL_TYPES)
     category_of_travel = models.CharField(max_length=15, null=False, blank=False,
                                             choices=TRAVEL_CATEGORIES)
@@ -88,9 +87,12 @@ class TripApproval(models.Model):
     trip = models.OneToOneField(Trips, on_delete=models.CASCADE, null=False, blank=False)
     approver = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=False,
                                 on_delete=models.PROTECT)
-    trip_is_approved = models.BooleanField(null=False, blank=False, default=False)
-    approval_date = models.DateField(null=True, blank=True, auto_now=True)
-    approval_comment = models.CharField(max_length=1000, null=True, blank=True)
+    trip_is_approved = models.BooleanField(null=False, blank=False, default=False,
+                                            verbose_name='Approval')
+    approval_request_date = models.DateField(null=False, blank=True, auto_now_add=True)
+    approval_date = models.DateField(null=True, blank=True)
+    approval_comment = models.CharField(max_length=1000, null=True, blank=True,
+                                        verbose_name='Comment')
 
 
 class TripItinerary(models.Model):
@@ -119,8 +121,12 @@ class TripItinerary(models.Model):
     comment = models.CharField(max_length=1000, blank=True, null=True)
 
     def __str__(self):
-        return ", ".join([self.trip.trip_name, " - ".join([self.city_of_departure, self.destination]), "Leg"])
-    
+        return ", ".join([
+                        self.trip.trip_name,
+                    " - ".join([self.city_of_departure, self.destination]),
+                    "Leg"
+                    ])
+  
     def get_absolute_url(self):
         """
         Unique and permanent url to an instance of this model. Given that there's no plan to

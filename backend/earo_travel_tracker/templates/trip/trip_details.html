@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 {% block content %}
+{% if approval_request_success_message %}
+<p>SUCCESS {{approval_request_success_message}}</p>
+{%endif %}
+{% if approval_request_error_message %}
+<p>ERROR! {{ approval_request_error_message }}</p>
+{%endif %}
 <div class="col-md-5 col-lg-4">
     <div class="card">
       <div class="card-header">
@@ -34,12 +40,22 @@
       <!-- /.card-body -->
       <div class="card-footer">
         <p>
+          {% if approval_status == "Approved" %}
+          Your trip is approved. <i class="fa fa-smile-o" aria-hidden="true"></i>
+          {% elif approval_status == "Unapproved" %}
+            <p>This trip is waiting for Approval</p>
+          {% elif approval_status == "Not requested" %}
             Happy with the trip details?
             {% if itinerary %}
-            <a href="" class="btn btn-secondary float-right">Submit trip for approval</a>
+            <form action="" method="POST">
+            {% csrf_token %}
+            {{ form }}
+              <button type="submit" class="btn btn-secondary float-right">Submit trip for approval</button>
+            </form>
             {% else %}
             <a href="{% url 'u_create_trip_itinerary' %}" class="btn btn-secondary float-right">Now add your itinerary</a>
             {% endif %}
+          {% endif %}
         </p>
       </div>
     </div>

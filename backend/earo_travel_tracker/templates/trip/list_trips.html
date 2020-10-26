@@ -21,11 +21,20 @@
           <tbody>
             {% for trip in trips %}
             <tr>
-                <td><a href="{% url 'u_trip_details' trip_id=trip.id %}">{{trip.trip_name}}</a></td>
-                <td>{{trip.traveler}}</td>
-                <td>{{trip.start_date}}</td>
-                <td>{{trip.end_date}}</td>
-                <td>{{trip.reason_for_travel}}</td>
+                <td><a href="{% url 'u_trip_details' trip_id=trip.trip.id %}">
+                  {{trip.trip.trip_name}}
+                  </a>
+                  &nbsp;-&nbsp;
+                  <a href="{% url 'u_approve_trip' approval_id=trip.id %}">
+                    {% if trip.trip_is_approved is False %}
+                    Approve
+                    {% endif %}
+                  </a>
+                </td>
+                <td>{{trip.trip.traveler}}</td>
+                <td>{{trip.trip.start_date}}</td>
+                <td>{{trip.trip.end_date}}</td>
+                <td>{{trip.trip.reason_for_travel}}</td>
             </tr>
             {% endfor %}
           </tbody>
