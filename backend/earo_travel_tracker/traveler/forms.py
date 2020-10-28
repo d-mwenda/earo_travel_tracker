@@ -14,8 +14,8 @@ class TravelerBioForm(forms.ModelForm):
         model = TravelerDetails
         fields = '__all__'
 
-    def __init__(self, *args, **kwargs):
-        super(TravelerBioForm, self).__init__(*args, **kwargs)
-        self.fields['date_of_birth'].widget.attrs.update({
-            'placeholder': 'YYYY-MM-DD',
-        })
+    # def __init__(self, *args, **kwargs):
+    #     super(TravelerBioForm, self).__init__(*args, **kwargs)
+    #     self.fields['date_of_birth'].widget.attrs.update({
+    #         'placeholder': 'YYYY-MM-DD',
+    #     })

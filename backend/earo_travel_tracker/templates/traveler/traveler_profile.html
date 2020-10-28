@@ -4,7 +4,7 @@
     <div class="card">
       <div class="card-header">
         <h4 class="card-title">
-            {{traveler.last_name}}, {{traveler.first_name}}
+            {{traveler.user_account.last_name}}, {{traveler.user_account.first_name}}
         </h4>
         <span class="float-right">
           <a href="{% url 'u_edit_traveler' traveler_id=traveler.id %}" class="btn btn-primary right">Edit Traveler</a>
@@ -14,11 +14,9 @@
       <div class="card-body">
         <dl class="row">
           <dt class="col-sm-4">First name</dt>
-          <dd class="col-sm-8">{{traveler.first_name}}</dd>
+          <dd class="col-sm-8">{{traveler.user_account.first_name}}</dd>
           <dt class="col-sm-4">Last name</dt>
-          <dd class="col-sm-8">{{traveler.last_name}}</dd>
-          <dt class="col-sm-4">Date of birth</dt>
-          <dd class="col-sm-8">{{traveler.date_of_birth}}</dd>
+          <dd class="col-sm-8">{{traveler.user_account.last_name}}</dd>
           <dt class="col-sm-4">Department</dt>
           <dd class="col-sm-8">{{traveler.department}}</dd>
           <dt class="col-sm-4">Type of traveler</dt>

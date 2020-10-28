@@ -33,7 +33,7 @@ urlpatterns = [
     path('delete-trip', TripDeleteView.as_view(), name='u_delete_trip'),
     # trip itinerary
     # path('trip-itinerary/trip=<trip_id>/new-leg', TripItineraryCreateView.as_view(), name='u_create_trip_itinerary'),
-    path('trip-itinerary/new-leg', TripItineraryCreateView.as_view(),
+    path('trip-itinerary/new-leg/trip=<trip_id>', TripItineraryCreateView.as_view(),
         name='u_create_trip_itinerary'),
     path('trip-itinerary/trip=<trip_id>', TripItineraryListView.as_view(),
         name='u_list_trip_itinerary'),

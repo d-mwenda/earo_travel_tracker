@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'widget_tweaks',
     'django_python3_ldap',
+    'tempus_dominus',
     # Earo-travel_tracker apps
     'traveler',
     'trip',
@@ -217,3 +218,7 @@ LOGGING = {
         },
     },
 }
+
+# Tempus Dominus datepicker settings
+TEMPUS_DOMINUS_INCLUDE_ASSETS = True
+TEMPUS_DOMINUS_LOCALIZE = True

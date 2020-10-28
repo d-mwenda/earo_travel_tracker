@@ -37,18 +37,18 @@ class TravelerDetails(models.Model):
         ('Partners', 'Partners'),
     )
 
-    first_name = models.CharField(max_length=20, null=False, blank=False, db_index=True)
-    last_name = models.CharField(max_length=20, null=False, blank=False)
-    date_of_birth = models.DateField(null=False, blank=False)
-    department = models.ForeignKey(DepartmentsModel, on_delete=models.PROTECT, null=False,
-                                    blank=False)
+    # first_name = models.CharField(max_length=20, null=False, blank=False, db_index=True)
+    # last_name = models.CharField(max_length=20, null=False, blank=False)
+    # date_of_birth = models.DateField(null=False, blank=False)
+    department = models.ForeignKey(DepartmentsModel, on_delete=models.PROTECT, null=True,
+                                    blank=True)
     type_of_traveler = models.CharField(max_length=20, null=False, blank=False,
                                         choices=TRAVEL_CATEGORIES)
     nationality = models.CharField(max_length=30, null=False, blank=False)
-    is_dependant_of = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True,
-                                        null=True, db_index=True, related_name="Guardian")
-    country_of_duty = models.CharField(max_length=40, null=False, blank=False,
-                                        verbose_name="Country of duty / residence")
+    # is_dependant_of = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True,
+    #                                     null=True, db_index=True, related_name="Guardian")
+    # country_of_duty = models.CharField(max_length=40, null=False, blank=False,
+    #                                     verbose_name="Country of duty / residence")
     contact_telephone = models.CharField(max_length=20, null=False, blank=False)
     contact_email = models.CharField(max_length=70, null=False, blank=True)
     user_account = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete= models.CASCADE,
@@ -60,7 +60,7 @@ class TravelerDetails(models.Model):
                                 null=True, related_name='trip_approver')
 
     def __str__(self):
-        return ", ".join([self.last_name, self.first_name])
+        return ", ".join([self.user_account.first_name, self.user_account.first_name])
 
     def get_absolute_url(self):
         return reverse('u_traveler_details', args=(self.id,))
