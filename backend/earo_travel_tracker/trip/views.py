@@ -8,6 +8,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect
+from django.core.mail import send_mail, send_mass_mail
+from django.conf import settings
 
 # Third party imports
 from rest_framework import viewsets
@@ -197,6 +199,47 @@ class TripDetailView(LoginRequiredMixin, UserOwnsTripMixin, DetailView):
         self.extra_context['approval_request_error_message'] = None
         return
 
+    def send_success_emails(self, trip, request, approval_request):
+        """
+        Send email to requester and approver once an approval request is made.
+        """
+        subject_line = f"""Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"""
+        approver_message = f"""Dear {trip.traveler.approver.first_name},\n
+                {trip.traveler.user_account.get_full_name()} has submitted a trip approval request for:\n
+                Trip: {trip.trip_name}\n
+                Start date: {trip.start_date}\n
+                End date: {trip.end_date}\n
+                \n
+                You can view and approve this trip on the link below:\n
+                {request.scheme}://{request.META['HTTP_HOST']}{reverse_lazy('u_approve_trip', kwargs={'approval_id': approval_request.id})}
+                \n
+                Regards,\n
+                Kenya Travel Tracking System.
+                """
+        recipient_message = f"""Dear {trip.traveler.user_account.first_name},\n
+                You have submitted a trip approval request for:\n
+                Trip: {trip.trip_name}\n
+                Start date: {trip.start_date}\n
+                End date: {trip.end_date}\n
+                \n
+                Regards,\n
+                Kenya Travel Tracking System.
+                """
+        approver_mail = (
+            subject_line,
+            approver_message,
+            settings.EMAIL_HOST_USER,
+            [trip.traveler.approver.email,],
+        )
+        requester_mail = (
+            subject_line,
+            recipient_message,
+            settings.EMAIL_HOST_USER,
+            [trip.traveler.user_account.email,],
+            )
+
+        send_mass_mail((approver_mail, requester_mail), fail_silently=False)
+
     def form_valid(self, request, trip_id):
         """
         Make an approval request by creating an instance of TripApprval
@@ -204,13 +247,16 @@ class TripDetailView(LoginRequiredMixin, UserOwnsTripMixin, DetailView):
         approver=self.get_approver(request, trip_id)
         if approver:
             try:
-                approval_request = TripApproval(trip=self.model.objects.get(id=trip_id),
+                trip = self.model.objects.get(id=trip_id)
+                approval_request = TripApproval(trip=trip,
                                                 approver=approver)
                 approval_request.save()
                 self.extra_context['approval_request_success_message'] = """Your request for approval
                                                                         has been sent."""
-                # TODO: send email to approver and requester.
                 print('requesting approval')
+                # send email to requester and approver
+                self.send_success_emails(trip, request, approval_request)
+
             except IntegrityError:
                 self.extra_context['approval_request_error_message'] = """An approval request for this
                                         trip was already sent earlier. You can only request for 
@@ -374,6 +420,26 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def get_test_func(self):
         return self.user_is_approver
 
+    def form_valid(self, form):
+        """If the form is valid, update the Approval model and send email to requester."""
+        self.object = form.save()
+        message = f"""Dear {self.object.trip.traveler.user_account.first_name},\n
+            Your trip with the below details has been approved.\n
+            Trip: {self.object.trip.trip_name}\n
+            Start date: {self.object.trip.start_date}\n
+            End date: {self.object.trip.end_date}\n
+            \n
+            Regards,\n
+            Kenya Travel Tracking System.
+            """
+        send_mail(
+            "Trip Approved",
+            message,
+            settings.EMAIL_HOST_USER,
+            [self.object.trip.traveler.user_account.email,],
+            fail_silently=False
+        )
+        return HttpResponseRedirect(self.get_success_url())
 
 class TripApprovalListView(LoginRequiredMixin, ListView):
     """

@@ -143,6 +143,16 @@ STATICFILES_DIRS = [
 LOGIN_REDIRECT_URL = reverse_lazy('u_create_trip')
 LOGOUT_REDIRECT_URL = reverse_lazy('login')
 
+# Email credentials
+EMAIL_USE_TLS = True
+EMAIL_HOST = secret_settings.EMAIL_HOST
+EMAIL_HOST_USER = secret_settings.EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = secret_settings.EMAIL_HOST_PASSWORD
+EMAIL_PORT = 587
+EMAIL_SUBJECT_PREFIX = 'Kenya Travel System'
+
+# All third-party apps / plugins settings should be below here
+
 # LDAP Settings for django_python3_ldap
 # The URL of the LDAP server.
 LDAP_AUTH_URL = secret_settings.LDAP_AUTH_URL

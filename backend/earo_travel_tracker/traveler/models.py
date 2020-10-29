@@ -60,7 +60,7 @@ class TravelerDetails(models.Model):
                                 null=True, related_name='trip_approver')
 
     def __str__(self):
-        return ", ".join([self.user_account.first_name, self.user_account.first_name])
+        return ", ".join([self.user_account.last_name, self.user_account.first_name])
 
     def get_absolute_url(self):
         return reverse('u_traveler_details', args=(self.id,))

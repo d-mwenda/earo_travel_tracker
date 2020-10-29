@@ -46,6 +46,4 @@ urlpatterns = [
     path('trip-expenses', TripExpensesViewSet),
     # trip approval
     path('trip-approval/approval_request=<approval_id>', ApproveTripView.as_view(), name='u_approve_trip'),
-    # trip approver groups
-    path('trip-approver-groups', ApproverGroupsViewSet),
 ]
