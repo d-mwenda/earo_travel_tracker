@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="col-8">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">{{ page_title }}
+        </h3>
+      </div>
+      <!-- /.card-header -->
+      <div class="card-body table-responsive p-0">
+        <table class="table table-hover text-nowrap">
+          <thead>
+            <tr>
+              <th>Trip</th>
+              <th>Start date</th>
+              <th>End date</th>
+              <th>Reason for travel</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for trip in trips %}
+            <tr>
+                <td><a href="{% url 'u_trip_details' trip_id=trip.id %}">
+                  {{trip.trip_name}}
+                  </a>
+                </td>
+                <td>{{trip.start_date}}</td>
+                <td>{{trip.end_date}}</td>
+                <td>{{trip.reason_for_travel}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <!-- /.card-body -->
+    </div>
+    <!-- /.card -->
+  </div>
+  {% endblock content %}

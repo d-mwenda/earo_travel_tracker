@@ -4,7 +4,16 @@
 <div class="col-8">
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">All Trips</h3>
+        <h3 class="card-title">{{ page_title }}
+          {%if filtered_by == upcoming %}
+          Upcoming Trips
+          {% elif filtered_by == awaiting_approval %}
+          Trips Awaiting Approval
+          {%elif filtered_by == ongoing %}
+          Ongoing Trips
+          {% else %}
+          {% endif %}
+        </h3>
       </div>
       <!-- /.card-header -->
       <div class="card-body table-responsive p-0">
@@ -16,6 +25,7 @@
               <th>Start date</th>
               <th>End date</th>
               <th>Reason for travel</th>
+              <th>Approval Status</th>
             </tr>
           </thead>
           <tbody>
@@ -24,17 +34,18 @@
                 <td><a href="{% url 'u_trip_details' trip_id=trip.trip.id %}">
                   {{trip.trip.trip_name}}
                   </a>
+                  {% if trip.trip_is_approved is False %}
                   &nbsp;-&nbsp;
-                  <a href="{% url 'u_approve_trip' approval_id=trip.id %}">
-                    {% if trip.trip_is_approved is False %}
+                  <a href="{% url 'u_approve_trip' approval_id=trip.id %}" class="btn bg-gradient-secondary btn-xs">
                     Approve
-                    {% endif %}
                   </a>
+                  {% endif %}
                 </td>
-                <td>{{trip.trip.traveler}}</td>
+                <td>{{trip.trip.traveler.user_account.first_name}} {{trip.trip.traveler.user_account.last_name}}</td>
                 <td>{{trip.trip.start_date}}</td>
                 <td>{{trip.trip.end_date}}</td>
                 <td>{{trip.trip.reason_for_travel}}</td>
+                <td>{% if trip.trip_is_approved %}Approved{% else %} Awaiting Approval {% endif %}</td>
             </tr>
             {% endfor %}
           </tbody>

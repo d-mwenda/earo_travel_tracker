@@ -294,13 +294,17 @@ class TripListView(LoginRequiredMixin, ListView):
     """
     This class implements the listing view for the Trip model.
     """
-    # TODO: implement time-based filters for ongoing and upcoming trips
     model = Trips
     context_object_name = 'trips'
-    template_name = 'trip/list_trips.html'
+    template_name = 'trip/view_trips.html'
     extra_context = {
-        'page_title': 'Trips'
+        'page_title': 'My Trips'
     }
+
+    def get_queryset(self):
+        queryset = self.model.objects.filter(traveler__user_account=self.request.user)
+        return queryset
+
 
 
 class TripDeleteView(LoginRequiredMixin, DeleteView):
@@ -450,21 +454,24 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
     model = TripApproval
     context_object_name = 'trips'
     template_name = 'trip/list_trips.html'
-    extra_context = {
-        'page_title': 'Trips'
-    }
+    page_title = None
 
     def get(self, request, *args, filter_by=None, **kwargs):
         """
         This method filters the queryset accordingly, depending on the url that calls the view.
         """
+        # TODO check permissions in the filters
         if filter_by:
             if filter_by == "upcoming":
                 queryset = self.model.objects.filter(trip__start_date__gt = timezone.now().date())
+                self.page_title = "Upcoming Trips"
             elif filter_by == "ongoing":
                 queryset = self.model.objects.filter(trip__start_date__lte = timezone.now().date())
                 queryset = queryset.filter(trip__end_date__gte = timezone.now().date())
+                self.page_title = "Ongoing Trips"
             elif filter_by== 'awaiting_approval':
                 queryset = self.model.objects.filter(trip_is_approved=False)
-        self.queryset = queryset
+                self.page_title = "Trips Awaiting Approval"
+            self.queryset = queryset
         return super().get(request, *args, **kwargs)
+

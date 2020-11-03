@@ -1,0 +1,39 @@
+{% extends 'foundation.html' %}
+
+{% block custom_styles %}
+<style>
+.error-div {
+    margin-top: 30%;
+}
+.btn {
+    margin: 3px
+}
+</style>
+{% endblock custom_styles %}
+
+{% block body %}
+<body class="error">
+    <div class="container">
+        <div class="row justify-content-xl-center">
+            <div class="error-div col-sm-12 col-md-12 col-lg-8 col-xl-8 text-center">
+                <h3><i class="fas fa-exclamation-triangle text-warning"></i> Oops! Thou shall not trespass.</h3>
+
+                <p>
+                You lack the necessary rights to perform the last action you tried.
+                You are logged in as <b>{{ request.user.first_name }} {{ request.user.last_name }}</b>.
+                </p>
+                <p>
+                Your immediate options are:
+                </p>
+
+                <span>
+                    <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-secondary">Go back to the previous page</a>
+                    <a href="{% url 'logout'%}?next={{ request.path }}" class="btn btn-secondary">Login with another account to try again</a>
+                </span><br/><br/>
+                <p>
+                    If you believe that you should have the access, contact IT for support.
+                </p>
+            </div>
+        </div>
+</div>
+{% endblock body %}

@@ -9,7 +9,7 @@ from .views import (
     TripViewSet, TripTravelerDependantsViewSet, TripExpensesViewSet, TripApprovalViewSet,
     TripItineraryViewSet, ApproverGroupsViewSet, TripCreateView, TripDetailView, TripUpdateView,
     TripDeleteView, TripListView, TripItineraryListView, TripItineraryCreateView,
-    TripItineraryUpdateView, TripItineraryDeleteView, ApproveTripView, TripApprovalListView
+    TripItineraryUpdateView, TripItineraryDeleteView, ApproveTripView, TripApprovalListView,
     )
 
 router = routers.SimpleRouter()
@@ -27,7 +27,9 @@ urlpatterns = [
     path('new-trip', TripCreateView.as_view(), name='u_create_trip'),
     path('list-trips/ongoing', TripApprovalListView.as_view(),  {'filter_by': 'ongoing'}, name='u_list_ongoing_trips'),
     path('list-trips/upcoming', TripApprovalListView.as_view(), {'filter_by': 'upcoming'}, name='u_list_upcoming_trips'),
-    path('list-trips/awaiting-approval', TripApprovalListView.as_view(), {'filter_by': 'awaiting_approval'}, name='u_list_awaiting_approval_trips'),
+    path('list-trips/my-trips', TripListView.as_view(), name='u_list_my_trips'),
+    path('list-trips/awaiting-approval', TripApprovalListView.as_view(), {'filter_by': 'awaiting_approval'},
+        name='u_list_awaiting_approval_trips'),
     path('update-trip/trip=<trip_id>', TripUpdateView.as_view(), name='u_update_trip'),
     path('trip-details/trip=<trip_id>', TripDetailView.as_view(), name='u_trip_details'),
     path('delete-trip', TripDeleteView.as_view(), name='u_delete_trip'),
