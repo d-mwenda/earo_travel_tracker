@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'django_python3_ldap',
     'tempus_dominus',
+    'grappelli',
     # Earo-travel_tracker apps
     'traveler',
     'trip',
@@ -52,7 +53,7 @@ INSTALLED_APPS = [
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = (
-    # "django.contrib.auth.backends.ModelBackend",
+    "django.contrib.auth.backends.ModelBackend",
     "django_python3_ldap.auth.LDAPBackend",
 )
 
@@ -139,8 +140,10 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
 # Logout redirect to Login page
-LOGIN_REDIRECT_URL = reverse_lazy('u_create_trip')
+LOGIN_REDIRECT_URL = reverse_lazy('u_list_my_trips')
 LOGOUT_REDIRECT_URL = reverse_lazy('login')
 
 # Email credentials

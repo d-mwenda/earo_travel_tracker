@@ -110,7 +110,7 @@ class TripItineraryForm(forms.ModelForm):
             ),
             'time_of_departure': TimePicker(
                                     options={
-                                        'format': 'H:m',
+                                        'format': 'HH:mm',
                                         'useCurrent': False,
                                     },
                                     attrs={

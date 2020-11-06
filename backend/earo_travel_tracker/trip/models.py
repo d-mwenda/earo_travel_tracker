@@ -85,8 +85,8 @@ class TripApproval(models.Model):
     By default the trip is unapproved.
     """
     trip = models.OneToOneField(Trips, on_delete=models.CASCADE, null=False, blank=False)
-    approver = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=False,
-                                on_delete=models.PROTECT)
+    approver = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
+                                on_delete=models.PROTECT, verbose_name="Approved by")
     trip_is_approved = models.BooleanField(null=False, blank=False, default=False,
                                             verbose_name='Approval')
     approval_request_date = models.DateField(null=False, blank=True, auto_now_add=True)

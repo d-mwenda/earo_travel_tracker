@@ -13,6 +13,8 @@ class DepartmentsModel(models.Model):
     """
     department = models.CharField(max_length=50, null=False, blank=False, db_index=True)
     description = models.CharField(max_length=200, null=False, blank=False)
+    trip_approver = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                            on_delete=models.PROTECT)
 
     def __str__(self):
         return self.department
@@ -60,7 +62,9 @@ class TravelerDetails(models.Model):
                                 null=True, related_name='trip_approver')
 
     def __str__(self):
-        return ", ".join([self.user_account.last_name, self.user_account.first_name])
+        if self.user_account:
+            return " ".join([self.user_account.first_name, self.user_account.last_name])
+        return self.id
 
     def get_absolute_url(self):
         return reverse('u_traveler_details', args=(self.id,))

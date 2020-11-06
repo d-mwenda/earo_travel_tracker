@@ -12,30 +12,30 @@
           <thead>
             <tr>
               <th>Name</th>
-              <th>Date of Birth</th>
               <th>Department</th>
-              <th>Type of Traveler</th>
               <th>Nationality</th>
-              <th>Is Dependant of</th>
-              <th>Country of duty / residence</th>
               <th>Contact Telephone</th>
               <th>Contact Email</th>
               <th>Line Manager</th>
+              <th>Trip Approver</th>
             </tr>
           </thead>
           <tbody>
             {% for traveler in travelers %}
             <tr>
-              <td><a href="{% url 'u_traveler_details' traveler_id=traveler.id %}">{{traveler.last_name}}, {{traveler.first_name}}</a></td>
-              <td>{{traveler.date_of_birth}}</td>
+              <td><a href="{% url 'u_traveler_details' traveler_id=traveler.id %}">{{traveler.user_account.first_name}}&nbsp;{{traveler.user_account.last_name}}</a></td>
               <td>{{traveler.department}}</td>
-              <td>{{traveler.type_of_traveler}}</td>
               <td>{{traveler.nationality}}</td>
-              <td>{{traveler.is_dependant_of}}</td>
-              <td>{{traveler.country_of_duty}}</td>
               <td>{{traveler.contact_telephone}}</td>
-              <td>{{traveler.contact_email}}</td>
+              <td>{{traveler.user_account.email}}</td>
               <td>{{traveler.is_managed_by}}</td>
+              {% if traveler.department.approver %}
+              <td>{{traveler.department.approver}}</td>
+              {% elif traveler.trip_approver %}
+              <td>{{traveler.trip_approver}}</td>
+              {% else %}
+              <td>No approver set</td>
+              {% endif %}
             </tr>
             {% endfor %}
           </tbody>

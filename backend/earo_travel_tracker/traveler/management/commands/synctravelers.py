@@ -25,7 +25,7 @@ class Command(BaseCommand):
                     type_of_traveler='Employee',
                     nationality='Kenyan',
                     contact_telephone='',
-                    contact_email=''.join([user.first_name, user.last_name, "@crs.org"]),
+                    contact_email=''.join([user.first_name, ".", user.last_name, "@crs.org"]),
                     user_account=user,
                 ).save()
                 self.stdout.write(self.style.SUCCESS(

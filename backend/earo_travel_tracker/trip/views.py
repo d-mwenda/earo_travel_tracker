@@ -1,12 +1,14 @@
 """
 All views for the trip app are implemented here.
 """
+from smtplib import SMTPRecipientsRefused
 from django.views.generic import CreateView, UpdateView, DetailView, DeleteView, ListView
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.core.mail import send_mail, send_mass_mail
 from django.conf import settings
@@ -23,7 +25,7 @@ from .serializers import (
     TripTravelerDependantsSerializer, ApprovalGroupsSerializer
     )
 from .forms import TripForm, ApprovalRequestForm, TripApprovalForm, TripItineraryForm
-from .utils import UserOwnsTripMixin
+from .utils import TripUtilsMixin
 
 
 # API endpoint views
@@ -112,7 +114,7 @@ class TripUpdateView(LoginRequiredMixin, UpdateView):
     }
 
 
-class TripDetailView(LoginRequiredMixin, UserOwnsTripMixin, DetailView):
+class TripDetailView(LoginRequiredMixin, TripUtilsMixin, DetailView):
     """
     This class implements the details view for the Trip model.
     """
@@ -176,20 +178,6 @@ class TripDetailView(LoginRequiredMixin, UserOwnsTripMixin, DetailView):
         return reverse_lazy('u_trip_details',
                             kwargs={'trip_id': trip_id})
 
-    def get_approver(self, request, trip_id):
-        """
-        Get the approver for the logged on user or return an error is the user has no
-        approver set.
-        """
-        try:
-            return  TravelerDetails.objects.get(user_account=request.user).approver
-        except ObjectDoesNotExist:
-            self.extra_context['approval_request_error_message'] = """We didn't find an
-                                    approver set for your account. Please contact IT for
-                                    this to be fixed then thereafter you can retry requesting
-                                    for approval."""
-            return self.get_success_url(trip_id)
-
     def reset_approval_request_messages(self):
         """
         This method resets the approval_request_messages in the context so that they don't
@@ -238,35 +226,38 @@ class TripDetailView(LoginRequiredMixin, UserOwnsTripMixin, DetailView):
             [trip.traveler.user_account.email,],
             )
 
-        send_mass_mail((approver_mail, requester_mail), fail_silently=False)
+        try:
+            send_mass_mail((approver_mail, requester_mail), fail_silently=False)
+        except SMTPRecipientsRefused as error:
+            print(f"The following error was encountered when sending the emails: {error}")
 
     def form_valid(self, request, trip_id):
         """
         Make an approval request by creating an instance of TripApprval
         """
-        approver=self.get_approver(request, trip_id)
+        approver = self.get_approver()
         if approver:
             try:
                 trip = self.model.objects.get(id=trip_id)
-                approval_request = TripApproval(trip=trip,
-                                                approver=approver)
+                approval_request = TripApproval(trip=trip)
                 approval_request.save()
-                self.extra_context['approval_request_success_message'] = """Your request for approval
-                                                                        has been sent."""
+                self.extra_context['approval_request_success_message'] = """Your request for
+                                approval has been sent."""
                 print('requesting approval')
                 # send email to requester and approver
                 self.send_success_emails(trip, request, approval_request)
 
             except IntegrityError:
-                self.extra_context['approval_request_error_message'] = """An approval request for this
-                                        trip was already sent earlier. You can only request for 
-                                        approval once. If you wish to send a reminder, consider sending
-                                        an email to your approver."""
+                self.extra_context['approval_request_error_message'] = """An approval request
+                                    for this trip was already sent earlier. You can only request for 
+                                    approval once. If you wish to send a reminder, consider sending
+                                    an email to your approver."""
                 print('at integrity constraint')
         else:
             self.extra_context['approval_request_error_message'] = """We didn't find an approver set
                                     for your account. Please contact IT for this to be rectified."""
             print("at no approver set")
+            # render to response with error like form.Invalid
         return HttpResponseRedirect(self.get_success_url(trip_id))
 
     def post(self, request, trip_id):
@@ -289,6 +280,10 @@ class TripDetailView(LoginRequiredMixin, UserOwnsTripMixin, DetailView):
                                                                  for a trip you don't own."""
             return HttpResponseRedirect(self.get_success_url(trip_id))
 
+    def get(self, request, *args, **kwargs):
+        # self.reset_approval_request_messages()
+        return super().get(self, request, *args, **kwargs)
+
 
 class TripListView(LoginRequiredMixin, ListView):
     """
@@ -306,7 +301,6 @@ class TripListView(LoginRequiredMixin, ListView):
         return queryset
 
 
-
 class TripDeleteView(LoginRequiredMixin, DeleteView):
     """
     This class implements the delete view for the Trip model.
@@ -319,7 +313,7 @@ class TripDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # Trip Itinerary
-class TripItineraryCreateView(LoginRequiredMixin, UserOwnsTripMixin, CreateView):
+class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
     """
     This class implements the create view for the TripItinerary model.
     """
@@ -357,7 +351,7 @@ class TripItineraryCreateView(LoginRequiredMixin, UserOwnsTripMixin, CreateView)
         trip_leg.trip = Trips.objects.get(id=trip_id)
         trip_leg.save()
         return HttpResponseRedirect(self.get_success_url(trip_id))
-    
+
     def get_success_url(self, trip_id):
         return reverse_lazy('u_trip_details', kwargs={'trip_id': trip_id})
 
@@ -399,7 +393,7 @@ class TripItineraryDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # Trip approvals
-class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, UpdateView):
     """
     This class creates handles approving a trip.
     """
@@ -414,19 +408,14 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         'page_title': 'Trips'
     }
 
-    def user_is_approver(self):
-        """
-        Confirm that the logged on user is the approver for the request.
-        """
-        print(self.get_object())
-        return bool(self.request.user == self.get_object().approver)
-
     def get_test_func(self):
         return self.user_is_approver
 
     def form_valid(self, form):
         """If the form is valid, update the Approval model and send email to requester."""
-        self.object = form.save()
+        self.object = form.save(commit=False)
+        self.object.approval_date = timezone.now().date()
+        self.object.save()
         message = f"""Dear {self.object.trip.traveler.user_account.first_name},\n
             Your trip with the below details has been approved.\n
             Trip: {self.object.trip.trip_name}\n
@@ -460,18 +449,23 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
         """
         This method filters the queryset accordingly, depending on the url that calls the view.
         """
-        # TODO check permissions in the filters
+        user = request.user
+        queryset = self.model.objects.filter(
+            Q(trip__traveler__approver=user) |
+            Q(trip__traveler__department__trip_approver=user)
+            )
         if filter_by:
             if filter_by == "upcoming":
-                queryset = self.model.objects.filter(trip__start_date__gt = timezone.now().date())
+                queryset = queryset.filter(trip__start_date__gt = timezone.now().date())
                 self.page_title = "Upcoming Trips"
             elif filter_by == "ongoing":
-                queryset = self.model.objects.filter(trip__start_date__lte = timezone.now().date())
-                queryset = queryset.filter(trip__end_date__gte = timezone.now().date())
+                queryset = queryset.filter(
+                                trip__start_date__lte = timezone.now().date(),
+                                trip__end_date__gte = timezone.now().date()
+                                )
                 self.page_title = "Ongoing Trips"
             elif filter_by== 'awaiting_approval':
-                queryset = self.model.objects.filter(trip_is_approved=False)
+                queryset = queryset.filter(trip_is_approved=False)
                 self.page_title = "Trips Awaiting Approval"
-            self.queryset = queryset
+        self.queryset = queryset
         return super().get(request, *args, **kwargs)
-

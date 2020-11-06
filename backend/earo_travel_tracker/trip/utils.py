@@ -2,9 +2,10 @@
 This file defines utility classes (mostly mixins) used in this app by various views.
 """
 from django.core.exceptions import ObjectDoesNotExist
+from traveler.models import TravelerDetails
 
 
-class UserOwnsTripMixin:
+class TripUtilsMixin:
     """
     This mixin class checks that a user owns the trip they are trying to request approval for.
     """
@@ -22,3 +23,40 @@ class UserOwnsTripMixin:
             self.extra_context['approval_request_error_message'] = """We can't find this trip in the
                                                                     database."""
             return self.get_success_url(trip_id)
+
+
+    def get_approver(self):
+        """
+        Get the approver for the logged on user or return an error is the user has no
+        approver set.
+        """
+        # TODO : user can't be their own approver.
+        traveler = self.get_object().trip.traveler
+        if traveler.approver:
+            print(traveler.approver)
+            return traveler.approver
+        # try:
+        #     print(traveler)
+        #     print(TravelerDetails.objects.get(user_account=self.request.user))
+        #     return TravelerDetails.objects.get(user_account=self.request.user).approver
+        # except ObjectDoesNotExist:
+        #     try:
+        elif traveler.department.approver:
+            print("trying department approver")
+            print(traveler.department.approver)
+            return traveler.department.approver
+            # except ObjectDoesNotExist:
+            #     print("no approver")
+            #     self.extra_context['approval_request_error_message'] = """We didn't find an
+            #                             approver set for your account. Please contact IT for
+            #                             this to be fixed then thereafter you can retry requesting
+            #                             for approval."""
+            #                             # TODO: make the below a get or borrow idea from form_invalid
+            #     return self.get_success_url(self.request.trip_id)
+    
+    def user_is_approver(self):
+        """
+        Confirm that the logged on user is the approver for the request.
+        """
+        user = self.request.user
+        return bool(user == self.get_approver())

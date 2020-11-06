@@ -25,8 +25,10 @@ api_url_patterns = router.urls
 urlpatterns = [
     # trips
     path('new-trip', TripCreateView.as_view(), name='u_create_trip'),
-    path('list-trips/ongoing', TripApprovalListView.as_view(),  {'filter_by': 'ongoing'}, name='u_list_ongoing_trips'),
-    path('list-trips/upcoming', TripApprovalListView.as_view(), {'filter_by': 'upcoming'}, name='u_list_upcoming_trips'),
+    path('list-trips/ongoing', TripApprovalListView.as_view(),  {'filter_by': 'ongoing'},
+    name='u_list_ongoing_trips'),
+    path('list-trips/upcoming', TripApprovalListView.as_view(), {'filter_by': 'upcoming'},
+        name='u_list_upcoming_trips'),
     path('list-trips/my-trips', TripListView.as_view(), name='u_list_my_trips'),
     path('list-trips/awaiting-approval', TripApprovalListView.as_view(), {'filter_by': 'awaiting_approval'},
         name='u_list_awaiting_approval_trips'),
@@ -34,7 +36,6 @@ urlpatterns = [
     path('trip-details/trip=<trip_id>', TripDetailView.as_view(), name='u_trip_details'),
     path('delete-trip', TripDeleteView.as_view(), name='u_delete_trip'),
     # trip itinerary
-    # path('trip-itinerary/trip=<trip_id>/new-leg', TripItineraryCreateView.as_view(), name='u_create_trip_itinerary'),
     path('trip-itinerary/new-leg/trip=<trip_id>', TripItineraryCreateView.as_view(),
         name='u_create_trip_itinerary'),
     path('trip-itinerary/trip=<trip_id>', TripItineraryListView.as_view(),
@@ -47,5 +48,6 @@ urlpatterns = [
     path('trip-traveler-dependants', TripTravelerDependantsViewSet),
     path('trip-expenses', TripExpensesViewSet),
     # trip approval
-    path('trip-approval/approval_request=<approval_id>', ApproveTripView.as_view(), name='u_approve_trip'),
+    path('trip-approval/approval_request=<approval_id>', ApproveTripView.as_view(),
+        name='u_approve_trip'),
 ]

@@ -8,7 +8,7 @@
         {{department.department}} Department
       </h3>
       <span class="float-right">
-        <a href="{% url 'u_edit_department' department_id=department.id %}" class="btn btn-primary right">Edit Department</a>
+        <a href="{% url 'u_edit_department' department_id=department.id %}" class="btn btn-secondary right">Edit Department</a>
       </span>
     </div>
     <!-- /.card-header -->
@@ -18,6 +18,8 @@
         <dd class="col-sm-8">{{department.department}}</dd>
         <dt class="col-sm-4">Description</dt>
         <dd class="col-sm-8"> {{department.description}}</dd>
+        <dt class="col-sm-4">Approver</dt>
+        <dd class="col-sm-8"> {{department.trip_approver.first_name}} {{department.trip_approver.last_name}}</dd>
         </dd>
       </dl>
     </div>

@@ -36,7 +36,7 @@ class DepartmentCreateView(LoginRequiredMixin, CreateView):
     Creating new departments.
     """
     model = DepartmentsModel
-    fields = ['department', 'description']
+    fields = ['department', 'description', 'trip_approver',]
     template_name = 'traveler/add_edit_department.html'
     extra_context = {
         'page_title': 'Add Department'
@@ -73,7 +73,7 @@ class DepartmentUpdateView(LoginRequiredMixin, UpdateView):
     View all departments.
     """
     model = DepartmentsModel
-    fields = ['department', 'description']
+    fields = ['department', 'description', 'trip_approver',]
     pk_url_kwarg = 'department_id'
     context_object_name = 'department'
     template_name = 'traveler/add_edit_department.html'

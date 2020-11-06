@@ -31,7 +31,8 @@ api_urlpatterns = [
 
 # All url patterns
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('administration/', admin.site.urls),
+    path('admin/', include('grappelli.urls')),
     path('api/', include(api_urlpatterns)),
     path('traveler/', include(traveler)),
     path('trip/', include(trip)),
