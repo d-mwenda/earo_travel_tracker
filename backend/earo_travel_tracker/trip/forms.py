@@ -19,7 +19,6 @@ class TripForm(forms.ModelForm):
                 'traveler',
                 'type_of_travel',
                 'category_of_travel',
-                'mode_of_travel',
                 'reason_for_travel',
                 'start_date',
                 'end_date',

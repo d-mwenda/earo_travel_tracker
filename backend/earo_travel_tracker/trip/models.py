@@ -27,12 +27,6 @@ class Trips(models.Model):
         ('International', 'International'),
     )
 
-    TRAVEL_MODES = (
-        ('Air', 'Air'),
-        ('Land', 'Land'),
-        ('Water', 'Water'),
-    )
-
     trip_name = models.CharField(max_length=200, blank=False, null=False, db_index=True,
                                 help_text="""In at most 200 characters give your trip a descriptive
                                 title""")
@@ -40,7 +34,6 @@ class Trips(models.Model):
     type_of_travel = models.CharField(max_length=15, null=False, blank=False, choices=TRAVEL_TYPES)
     category_of_travel = models.CharField(max_length=15, null=False, blank=False,
                                             choices=TRAVEL_CATEGORIES)
-    mode_of_travel = models.CharField(max_length=10, null=False, blank=False, choices=TRAVEL_MODES)
     reason_for_travel = models.CharField(max_length=1000, null=False, blank=False, help_text=
                                 "Use less than 1000 characters to describe the reasons for travel")
     start_date = models.DateField(null=False, blank=False)

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django_python3_ldap',
     'tempus_dominus',
     'grappelli',
+    'guardian',
     # Earo-travel_tracker apps
     'traveler',
     'trip',
@@ -55,6 +56,7 @@ INSTALLED_APPS = [
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
     "django_python3_ldap.auth.LDAPBackend",
+    "guardian.backends.ObjectPermissionBackend",
 )
 
 MIDDLEWARE = [
@@ -235,3 +237,7 @@ LOGGING = {
 # Tempus Dominus datepicker settings
 TEMPUS_DOMINUS_INCLUDE_ASSETS = True
 TEMPUS_DOMINUS_LOCALIZE = True
+
+# django-guardian settings
+GUARDIAN_RENDER_403 = True
+# TODO: design and set GUARDIAN_TEMPLATE_403

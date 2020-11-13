@@ -114,11 +114,12 @@ class TripUpdateView(LoginRequiredMixin, UpdateView):
     }
 
 
-class TripDetailView(LoginRequiredMixin, TripUtilsMixin, DetailView):
+class TripDetailView(LoginRequiredMixin, PermissionRequiredMixin, TripUtilsMixin, DetailView):
     """
     This class implements the details view for the Trip model.
     """
     model = Trips
+    permission_required = ('view_trips',)
     itinerary_model = TripItinerary
     pk_url_kwarg = 'trip_id'
     context_object_name = 'trip'
