@@ -5,7 +5,7 @@ from smtplib import SMTPRecipientsRefused
 from django.views.generic import CreateView, UpdateView, DetailView, DeleteView, ListView
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models import Q
@@ -15,6 +15,8 @@ from django.conf import settings
 
 # Third party imports
 from rest_framework import viewsets
+from guardian.mixins import PermissionRequiredMixin
+from guardian.shortcuts import get_perms
 # Earo_travel_tracker imports
 from traveler.models import TravelerDetails
 from .models import (
@@ -114,12 +116,13 @@ class TripUpdateView(LoginRequiredMixin, UpdateView):
     }
 
 
-class TripDetailView(LoginRequiredMixin, PermissionRequiredMixin, TripUtilsMixin, DetailView):
+class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, DetailView):
     """
     This class implements the details view for the Trip model.
     """
+    # TODO: check that user is approver or has perm in order to view this view
     model = Trips
-    permission_required = ('view_trips',)
+    return_403 = True
     itinerary_model = TripItinerary
     pk_url_kwarg = 'trip_id'
     context_object_name = 'trip'
@@ -131,6 +134,14 @@ class TripDetailView(LoginRequiredMixin, PermissionRequiredMixin, TripUtilsMixin
     }
     form_class = ApprovalRequestForm
     approval_status = None
+
+    def test_func(self):
+        """
+        Check that the user has permission for the instance or is an approver.
+        """
+        trip = self.get_object()
+        user = self.request.user
+        return 'view_trips' in get_perms(user, trip) or self.user_is_approver(trip.traveler)
 
     def get_context_data(self, **kwargs):
         """
@@ -230,13 +241,14 @@ class TripDetailView(LoginRequiredMixin, PermissionRequiredMixin, TripUtilsMixin
         try:
             send_mass_mail((approver_mail, requester_mail), fail_silently=False)
         except SMTPRecipientsRefused as error:
+            # TODO friendly error to user for invalid email address
             print(f"The following error was encountered when sending the emails: {error}")
 
     def form_valid(self, request, trip_id):
         """
         Make an approval request by creating an instance of TripApprval
         """
-        approver = self.get_approver()
+        approver = self.get_approver(self.object.traveler)
         if approver:
             try:
                 trip = self.model.objects.get(id=trip_id)
@@ -400,6 +412,7 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
     """
     model = TripApproval
     form_class = TripApprovalForm
+    context_object_name = 'trip_approval'
     permission_denied_message = """It seems like you lack the appropriate permissions to approve.
                                 Please contact IT for help"""
     success_url = reverse_lazy('u_list_awaiting_approval_trips')
@@ -409,8 +422,8 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         'page_title': 'Trips'
     }
 
-    def get_test_func(self):
-        return self.user_is_approver
+    def test_func(self):
+        return self.user_is_approver(self.get_object().trip.traveler)
 
     def form_valid(self, form):
         """If the form is valid, update the Approval model and send email to requester."""
@@ -446,10 +459,11 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
     template_name = 'trip/list_trips.html'
     page_title = None
 
-    def get(self, request, *args, filter_by=None, **kwargs):
+    def get(self, request, *args, **kwargs):
         """
         This method filters the queryset accordingly, depending on the url that calls the view.
         """
+        filter_by = kwargs['filter_by']
         user = request.user
         queryset = self.model.objects.filter(
             Q(trip__traveler__approver=user) |
@@ -462,7 +476,8 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
             elif filter_by == "ongoing":
                 queryset = queryset.filter(
                                 trip__start_date__lte = timezone.now().date(),
-                                trip__end_date__gte = timezone.now().date()
+                                trip__end_date__gte = timezone.now().date(),
+                                trip_is_approved = True
                                 )
                 self.page_title = "Ongoing Trips"
             elif filter_by== 'awaiting_approval':
@@ -470,3 +485,8 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
                 self.page_title = "Trips Awaiting Approval"
         self.queryset = queryset
         return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, *args, **kwargs):
+        ctx = super().get_context_data(*args, **kwargs)
+        ctx["page_title"] = self.page_title
+        return ctx

@@ -5,7 +5,7 @@
 {% endfor %}
 {% for field in form.visible_fields %}
 {% if field.errors %}
-    <div class="col-sm-12 col-md-6 col-lg-6 col-xs-6">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
         <div class="form-group">
             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
             {{ field | add_class:"form-control is-invalid" }}
@@ -16,7 +16,7 @@
         
     </div>
  {% else %}
-    <div class="col-sm-12 col-md-6 col-lg-6 col-xs-6">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
         <div class="form-group">
             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
             {{ field | add_class:"form-control" }}
