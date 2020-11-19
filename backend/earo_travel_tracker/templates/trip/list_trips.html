@@ -1,19 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="col-8">
+<div class="col-12">
     <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">{{ page_title }}
-          {%if filtered_by == upcoming %}
-          Upcoming Trips
-          {% elif filtered_by == awaiting_approval %}
-          Trips Awaiting Approval
-          {%elif filtered_by == ongoing %}
-          Ongoing Trips
-          {% else %}
-          {% endif %}
-        </h3>
+      <div class="card-header text-center">
+        <h3 class="card-title">{{page_title}}</h3>
       </div>
       <!-- /.card-header -->
       <div class="card-body table-responsive p-0">
@@ -39,6 +30,8 @@
                   <a href="{% url 'u_approve_trip' approval_id=trip.id %}" class="btn bg-gradient-secondary btn-xs">
                     Approve
                   </a>
+                  {% else %}
+                  &nbsp;-&nbsp;Approved
                   {% endif %}
                 </td>
                 <td>{{trip.trip.traveler.user_account.first_name}} {{trip.trip.traveler.user_account.last_name}}</td>

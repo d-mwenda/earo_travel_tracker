@@ -20,9 +20,11 @@
         <h3 class="card-title">
             {{trip.trip_name}} Trip Details
         </h3>
+        {% if request.user == trip.traveler.user_account %}
         <span class="float-right">
           <a href="{% url 'u_update_trip' trip_id=trip.id %}" class="btn btn-secondary right">Modify trip</a>
         </span>
+        {% endif %}
       </div>
       <!-- /.card-header -->
       <div class="card-body">
@@ -35,8 +37,6 @@
           <dd class="col-sm-8 text-right">{{trip.type_of_travel}}</dd>
           <dt class="col-sm-4">Category of Travel</dt>
           <dd class="col-sm-8 text-right">{{trip.category_of_travel}}</dd>
-          <dt class="col-sm-4">Mode of Travel</dt>
-          <dd class="col-sm-8 text-right">{{trip.mode_of_travel}}</dd>
           <dt class="col-sm-4">Reason for Travel</dt>
           <dd class="col-sm-8 text-right">{{trip.reason_for_travel}}</dd>
           <dt class="col-sm-4">Start date</dt>
@@ -46,6 +46,7 @@
         </dl>
       </div>
       <!-- /.card-body -->
+      {% if request.user == trip.traveler.user_account %}
       <div class="card-footer">
         <p>
           {% if approval_status == "Approved" %}
@@ -66,6 +67,7 @@
           {% endif %}
         </p>
       </div>
+      {% endif %}
     </div>
     <!-- /.card -->
   </div>
@@ -76,9 +78,11 @@
                 <h3 class="card-title">
                     Trip Itinerary
                 </h3>
+                {% if request.user == trip.traveler.user_account %}
                 <span class="float-right">
                     <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-secondary right">Add a trip leg</a>
                 </span>
+                {% endif %}
             </div>
             <!-- /.card-header-->
             <div class="card-body table-responsive p-0">

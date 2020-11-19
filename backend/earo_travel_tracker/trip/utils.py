@@ -25,13 +25,12 @@ class TripUtilsMixin:
             return self.get_success_url(trip_id)
 
 
-    def get_approver(self):
+    def get_approver(self, traveler):
         """
         Get the approver for the logged on user or return an error is the user has no
         approver set.
         """
         # TODO : user can't be their own approver.
-        traveler = self.get_object().trip.traveler
         if traveler.approver:
             print(traveler.approver)
             return traveler.approver
@@ -54,9 +53,9 @@ class TripUtilsMixin:
             #                             # TODO: make the below a get or borrow idea from form_invalid
             #     return self.get_success_url(self.request.trip_id)
     
-    def user_is_approver(self):
+    def user_is_approver(self, traveler):
         """
         Confirm that the logged on user is the approver for the request.
         """
         user = self.request.user
-        return bool(user == self.get_approver())
+        return bool(user == self.get_approver(traveler))
