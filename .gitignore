@@ -57,3 +57,7 @@ testem.log
 
 # Application files
 *secret_settings.py
+# Settings files that are different between dev, UAT and prod
+*settings.py
+*wsgi_windows.py
+*requirements.txt
