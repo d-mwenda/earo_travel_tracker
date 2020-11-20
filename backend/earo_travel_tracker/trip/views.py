@@ -199,12 +199,12 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         self.extra_context['approval_request_error_message'] = None
         return
 
-    def send_success_emails(self, trip, request, approval_request):
+    def send_success_emails(self, trip, request, approval_request, approver):
         """
         Send email to requester and approver once an approval request is made.
         """
         subject_line = f"""Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"""
-        approver_message = f"""Dear {trip.traveler.approver.first_name},\n
+        approver_message = f"""Dear {approver.first_name},\n
                 {trip.traveler.user_account.get_full_name()} has submitted a trip approval request for:\n
                 Trip: {trip.trip_name}\n
                 Start date: {trip.start_date}\n
@@ -248,7 +248,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         """
         Make an approval request by creating an instance of TripApprval
         """
-        approver = self.get_approver(self.object.traveler)
+        approver = self.get_approver(self.get_object().traveler)
         if approver:
             try:
                 trip = self.model.objects.get(id=trip_id)
@@ -258,7 +258,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
                                 approval has been sent."""
                 print('requesting approval')
                 # send email to requester and approver
-                self.send_success_emails(trip, request, approval_request)
+                self.send_success_emails(trip, request, approval_request, approver)
 
             except IntegrityError:
                 self.extra_context['approval_request_error_message'] = """An approval request
