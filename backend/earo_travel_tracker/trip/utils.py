@@ -44,14 +44,14 @@ class TripUtilsMixin:
             print("trying department approver")
             print(traveler.department.trip_approver)
             return traveler.department.trip_approver
-            # except ObjectDoesNotExist:
-            #     print("no approver")
-            #     self.extra_context['approval_request_error_message'] = """We didn't find an
-            #                             approver set for your account. Please contact IT for
-            #                             this to be fixed then thereafter you can retry requesting
-            #                             for approval."""
-            #                             # TODO: make the below a get or borrow idea from form_invalid
-            #     return self.get_success_url(self.request.trip_id)
+        else:
+            print("no approver")
+            self.extra_context['approval_request_error_message'] = """We didn't find an
+                                    approver set for your account. Please contact IT for
+                                    this to be fixed then thereafter you can retry requesting
+                                    for approval."""
+                                    # TODO: make the below a get or borrow idea from form_invalid
+            return self.get_success_url(self.request.trip_id)
     
     def user_is_approver(self, traveler):
         """
