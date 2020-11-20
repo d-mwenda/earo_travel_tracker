@@ -51,7 +51,7 @@ class TripUtilsMixin:
                                     this to be fixed then thereafter you can retry requesting
                                     for approval."""
                                     # TODO: make the below a get or borrow idea from form_invalid
-            return self.get_success_url(self.request.trip_id)
+            return self.render_to_response()
     
     def user_is_approver(self, traveler):
         """
