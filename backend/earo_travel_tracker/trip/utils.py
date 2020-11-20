@@ -40,10 +40,10 @@ class TripUtilsMixin:
         #     return TravelerDetails.objects.get(user_account=self.request.user).approver
         # except ObjectDoesNotExist:
         #     try:
-        elif traveler.department.approver:
+        elif traveler.department.trip_approver:
             print("trying department approver")
-            print(traveler.department.approver)
-            return traveler.department.approver
+            print(traveler.department.trip_approver)
+            return traveler.department.trip_approver
             # except ObjectDoesNotExist:
             #     print("no approver")
             #     self.extra_context['approval_request_error_message'] = """We didn't find an
