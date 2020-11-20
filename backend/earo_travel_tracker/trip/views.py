@@ -229,7 +229,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
             subject_line,
             approver_message,
             settings.EMAIL_HOST_USER,
-            [trip.traveler.approver.email,],
+            [approver.email,],
         )
         requester_mail = (
             subject_line,
