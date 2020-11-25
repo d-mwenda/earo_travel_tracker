@@ -80,7 +80,7 @@
                 </h3>
                 {% if request.user == trip.traveler.user_account %}
                 <span class="float-right">
-                    <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-secondary right">Add a trip leg</a>
+                    <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-theme-primary right">Add a trip leg</a>
                 </span>
                 {% endif %}
             </div>

@@ -1,0 +1,12 @@
+#top-nav {
+    background-color: #62B5E5;
+}
+
+#side-nav {
+    background-color: rgb(0, 48, 135) !important;
+}
+
+.btn-theme-primary {
+    background-color: rgb(0, 48, 135);
+    color: aliceblue;
+}
