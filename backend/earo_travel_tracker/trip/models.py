@@ -41,6 +41,8 @@ class Trips(models.Model):
     is_mission_critical = models.BooleanField(null=False, blank=False)
     is_travel_completed = models.BooleanField(null=False, blank=False, default=False)
     created_on = models.DateTimeField(auto_now=True, null=False)
+    scope_of_work = models.FileField(upload_to="uploads/scope_of_work/%Y/%m/%d/", verbose_name="Scope of Work",
+                                null=True, blank=False)
 
     def get_absolute_url(self):
         """

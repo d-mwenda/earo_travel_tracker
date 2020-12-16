@@ -1,17 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
-{% if approval_request_success_message %}
+{% if messages %}
 <div class="col-12">
-  <p class="alert alert-success text-center">
-    {{approval_request_success_message}}
+  {% for message in messages %}
+  <p class="alert text-center {% if message.tags == 'error' %}alert-danger{%else%}alert-{{message.tags}}{%endif%}">
+    {{message}}
   </p>
-</div>
-{%endif %}
-{% if approval_request_error_message %}
-<div class="col-12">
-  <p class="alert alert-danger text-center">
-    {{ approval_request_error_message }}
-  </p>
+  {% endfor %}
 </div>
 {%endif %}
 <div class="col-md-5 col-lg-4">
