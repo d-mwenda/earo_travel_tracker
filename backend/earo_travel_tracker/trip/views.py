@@ -10,7 +10,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin as DjangoPermissi
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models import Q
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound, Http404
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -319,11 +319,12 @@ class TripListView(PermissionListMixin, ListView):
         'page_title': 'My Trips'
     }
 
-    def get_queryset(self):
+    def get_queryset(self, *args, **kwargs):
         """
         Limit the trips to those belonging to the logged on user.
         """
-        queryset = self.model.objects.filter(traveler__user_account=self.request.user)
+        queryset = super().get_queryset(*args, **kwargs)
+        queryset.filter(traveler__user_account=self.request.user)
         return queryset
 
 
@@ -352,16 +353,28 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
         'page_title': 'Trip Itinerary',
         'section_title': 'Add a Leg'
     }
-    # success_url = reverse_lazy('u_trip_details', kwargs={'trip_id': 1})
+
+    def get_trip(self, trip_id):
+        """
+        Get the trip for which an itinerary leg is to be created.
+        """
+        try:
+            return Trips.objects.get(id=trip_id)
+        except Trips.DoesNotExist:
+            raise Http404
 
     def get(self, request, *args, **kwargs):
         """
         add trip_id to request for security and prevent user tampering.
         Use the trip_id from the request in the post
         """
-        # TODO first check that trip exists
-        # TODO verify that user owns trip
-        request.session['trip'] = kwargs.get('trip_id')
+        trip_id = kwargs.get('trip_id')
+        trip = self.get_trip(trip_id)
+        if self.user_owns_trip(trip):
+            return super().get(request)
+        else:
+            return HttpResponseForbidden()
+        request.session['trip'] = kwargs.get(trip_id)
         return super().get(request)
 
     def post(self, request, *args, **kwargs):
