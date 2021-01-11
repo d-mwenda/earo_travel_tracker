@@ -28,7 +28,7 @@ SECRET_KEY = 'h)e&n7sq8#)rjradk&(^!u#lezygl9d-mx-t+d3yg)b31wkxod'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', '10.109.30.241']
+ALLOWED_HOSTS = ['127.0.0.1', '10.109.30.43']
 
 
 # Application definition
@@ -144,6 +144,9 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = '/media/'
+
 # Logout redirect to Login page
 LOGIN_REDIRECT_URL = reverse_lazy('u_list_my_trips')
 LOGOUT_REDIRECT_URL = reverse_lazy('login')
@@ -156,6 +159,7 @@ EMAIL_HOST_PASSWORD = secret_settings.EMAIL_HOST_PASSWORD
 EMAIL_PORT = 587
 EMAIL_SUBJECT_PREFIX = 'Kenya Travel System'
 
+# --------------------------------------------------------------------------------------------
 # All third-party apps / plugins settings should be below here
 
 # LDAP Settings for django_python3_ldap

@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if messages %}
+<div class="col-12">
+  {% for message in messages %}
+  <p class="alert text-center {% if message.tags == 'error' %}alert-danger{%else%}alert-{{message.tags}}{%endif%}">
+    {{message}}
+  </p>
+  {% endfor %}
+</div>
+{%endif %}
 <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
     <div class="card">
         <div class="card-header text-center">
@@ -29,7 +38,7 @@
                 <div class="card-body"> 
                     <div class="row">
                         {% include 'render_form.html' %}
-                        <button class="form-control btn-secondary" type="submit">Submit</button>
+                        <button class="form-control btn-theme-primary" type="submit">Submit</button>
                     </div> 
                 </div>
             </form>

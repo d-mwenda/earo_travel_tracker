@@ -23,6 +23,7 @@ class TripForm(forms.ModelForm):
                 'start_date',
                 'end_date',
                 'is_mission_critical',
+                'scope_of_work',
                 ]
 
         widgets = {

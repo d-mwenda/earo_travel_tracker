@@ -1,0 +1,8 @@
+{% extends 'emails/base.html' %}
+{% block email_body %}
+<p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">Your trip approval request for the below trip has been rejected with the comment:</p>
+<p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">Comment: {{approval_object..comment}}</p>
+<p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">Trip: {{ approval_object.trip.trip_name }}</p>
+<p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">Start date: {{approval_object.trip.start_date}}</p>
+<p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; Margin-bottom: 15px;">End date: {{approval_object.trip.end_date}}</p>
+{% endblock email_body %}
