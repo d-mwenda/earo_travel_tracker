@@ -26,19 +26,20 @@ from trip.urls import urlpatterns as trip
 
 
 # url patterns for restful APIs
-api_urlpatterns = [
-    path('traveler/', include(traveler_api)),
-    path('trip/', include(trip_api)),
-]
+# ***** Disabled API URLs until authentication is enforced *****
+# api_urlpatterns = [
+#     path('traveler/', include(traveler_api)),
+#     path('trip/', include(trip_api)),
+# ]
 
 # All url patterns
 urlpatterns = [
     path('administration/', admin.site.urls),
     path('admin/', include('grappelli.urls')),
-    path('api/', include(api_urlpatterns)),
+    # path('api/', include(api_urlpatterns)),
     path('traveler/', include(traveler)),
     path('trip/', include(trip)),
     path('accounts/', include('django.contrib.auth.urls')),
-    # Temporary redirect for domain root
-    path('', RedirectView.as_view(pattern_name='u_create_trip')),
+    # Redirect domain root to List trip
+    path('', RedirectView.as_view(pattern_name='u_list_my_trips')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

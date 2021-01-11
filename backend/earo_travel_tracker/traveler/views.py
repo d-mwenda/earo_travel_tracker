@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 
 # Third party apps imports
 from rest_framework import viewsets
+from guardian.mixins import LoginRequiredMixin, PermissionRequiredMixin
 # Earo_travel_tracker imports
 from .models import TravelerDetails, DepartmentsModel
 from .serializers import TravelerDetailsSerializer, DepartmentSerializer
@@ -31,10 +32,14 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
 # classes below are Non-API views
 # Department
-class DepartmentCreateView(LoginRequiredMixin, CreateView):
+class DepartmentCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     """
     Creating new departments.
     """
+    accept_global_perms = True
+    return_403 = True
+    permission_required = 'traveler.add_departmentsmodel'
+    permission_object = None
     model = DepartmentsModel
     fields = ['department', 'description', 'trip_approver',]
     template_name = 'traveler/add_edit_department.html'
@@ -68,14 +73,16 @@ class DepartmentDetailView(LoginRequiredMixin, DetailView):
     }
 
 
-class DepartmentUpdateView(LoginRequiredMixin, UpdateView):
+class DepartmentUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     """
     View all departments.
     """
+    return_403 = True
     model = DepartmentsModel
     fields = ['department', 'description', 'trip_approver',]
     pk_url_kwarg = 'department_id'
     context_object_name = 'department'
+    permission_required = 'traveler.change_departmentsmodel'
     template_name = 'traveler/add_edit_department.html'
     # success_url = reverse_lazy('u_department_details', kwargs={'department_id': 'department.id'})
     extra_context = {
@@ -83,7 +90,7 @@ class DepartmentUpdateView(LoginRequiredMixin, UpdateView):
     }
 
 
-class DepartmentDeleteView(LoginRequiredMixin, DeleteView):
+class DepartmentDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     """
     View all departments.
     """
@@ -91,49 +98,54 @@ class DepartmentDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # Travelers
-class TravelerCreateView(LoginRequiredMixin, CreateView):
+class TravelerCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     """
     Add new travelers.
     """
     model = TravelerDetails
     form_class = TravelerBioForm
+    permission_required = 'traveler.create_travelerdetails'
+    permission_object = None
     template_name = 'traveler/add_edit_traveler.html'
     extra_context = {
         'page_title': 'Add Traveler'
     }
 
 
-class TravelerListView(LoginRequiredMixin, ListView):
+class TravelerListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """
     View all registered travelers.
     """
     model = TravelerDetails
     context_object_name = 'travelers'
+    permission_required = 'traveler.view_travelerdetails'
     template_name = 'traveler/list_travelers.html'
     extra_context = {
         'page_title': 'All Travelers'
     }
 
 
-class TravelerDetailView(LoginRequiredMixin, DetailView):
+class TravelerDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     """
     View a travelers profile.
     """
     model = TravelerDetails
     pk_url_kwarg = 'traveler_id'
     context_object_name = 'traveler'
+    permission_required = 'traveler.view_travelerdetails'
     template_name = 'traveler/traveler_profile.html'
     extra_context = {
         'page_title': 'Traveler Profile'
     }
 
 
-class TravelerUpdateView(LoginRequiredMixin, UpdateView):
+class TravelerUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     """
     View a travelers profile.
     """
     model = TravelerDetails
     form_class = TravelerBioForm
+    permission_required = 'traveler.change_travelerdetails'
     pk_url_kwarg = 'traveler_id'
     context_object_name = 'traveler'
     template_name = 'traveler/add_edit_traveler.html'
@@ -142,13 +154,14 @@ class TravelerUpdateView(LoginRequiredMixin, UpdateView):
     }
 
 
-class TravelerDeleteView(LoginRequiredMixin, DetailView):
+class TravelerDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     """
     View a travelers profile.
     """
     model = TravelerDetails
     pk_url_kwarg = 'traveler_id'
     context_object_name = 'traveler'
+    permission_required = 'traveler.change_travelerdetails'
     template_name = 'traveler/traveler_profile.html'
     extra_context = {
         'page_title': 'Traveler Profile'

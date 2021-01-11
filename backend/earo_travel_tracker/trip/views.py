@@ -5,8 +5,9 @@ from smtplib import SMTPRecipientsRefused
 from django.views.generic import CreateView, UpdateView, DetailView, DeleteView, ListView
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.mixins import PermissionRequiredMixin as DjangoPermissionRequiredMixin
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin as DjangoPermissionRequiredMixin 
+# TODO is the above import really  necessary. Shouldn't django guardian suffice????????????
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models import Q
@@ -19,7 +20,7 @@ from django.contrib import messages
 
 # Third party imports
 from rest_framework import viewsets
-from guardian.mixins import PermissionRequiredMixin, PermissionListMixin
+from guardian.mixins import PermissionRequiredMixin, PermissionListMixin, LoginRequiredMixin
 from guardian.shortcuts import get_perms
 # Earo_travel_tracker imports
 from traveler.models import TravelerDetails
@@ -86,12 +87,17 @@ class ApproverGroupsViewSet(viewsets.ModelViewSet):
 
 # Non-API views
 # Trip
-class TripCreateView(DjangoPermissionRequiredMixin, CreateView):
+class TripCreateView(LoginRequiredMixin, PermissionRequiredMixin,CreateView):
     """
     This class implements the create view for the Trip model.
+    Important settings:
+    permission_object = None. This ensures that the PermissionRequiredMixin
+    doesn't throw an error.
     """
     model = Trips
     permission_required = 'trip.add_trips'
+    permission_object = None
+    accept_global_perms = True
     raise_exception = True
     form_class = TripForm
     template_name = 'trip/add_edit_trip.html'
@@ -106,11 +112,11 @@ class TripCreateView(DjangoPermissionRequiredMixin, CreateView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class TripUpdateView(PermissionRequiredMixin, UpdateView):
+class TripUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     """
     This class implements the update view for the Trip model.
     """
-    # TODO. approved trips cannot be modified, otherwise they require reapproval.
+    # TODO. approved trips cannot be modified, otherwise they require reapproval. Check if a trip is approved.
     model = Trips
     form_class = TripForm
     permission_required = 'trip.change_trips'
@@ -306,7 +312,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         return super().get(self, request, *args, **kwargs)
 
 
-class TripListView(PermissionListMixin, ListView):
+class TripListView(LoginRequiredMixin, PermissionListMixin, ListView):
     """
     This class implements the listing view for the Trip model.
     """
@@ -346,6 +352,7 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
     """
     # TODO. Trip Itinerary start and end dates must be bound by trip start and end dates.
     # TODO. implement form class with place holders and no Leg status
+    # TODO. Implement permission_required with the object being the parent trip.
     model = TripItinerary
     form_class = TripItineraryForm
     template_name = 'trip/add_edit_trip_itinerary.html'
@@ -395,7 +402,7 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
         return reverse_lazy('u_trip_details', kwargs={'trip_id': trip_id})
 
 
-class TripItineraryUpdateView(PermissionRequiredMixin, UpdateView):
+class TripItineraryUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     """
     This class implements the update view for the TripItinerary model.
     """
@@ -409,7 +416,7 @@ class TripItineraryUpdateView(PermissionRequiredMixin, UpdateView):
         'page_title': 'Edit Trip Itinerary'
     }
 
-class TripItineraryListView(PermissionRequiredMixin, ListView):
+class TripItineraryListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """
     This class implements the listing view for the TripItinerary model.
     """
@@ -493,7 +500,7 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         )
         return HttpResponseRedirect(self.get_success_url())
 
-class TripApprovalListView(PermissionRequiredMixin, ListView):
+class TripApprovalListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """
     This class displays trips whose details have been filled and submitted for approval.
     Depending on the url called, there are dfferent keywords to filter the queryset to return the
