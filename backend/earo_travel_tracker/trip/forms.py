@@ -5,7 +5,7 @@ from django import forms
 # third-party library imports
 from tempus_dominus.widgets import DatePicker, TimePicker
 # earo_travel_tracker imports
-from .models import Trips, TripApproval, TripItinerary
+from .models import Trip, TripApproval, TripItinerary
 
 
 class TripForm(forms.ModelForm):
@@ -13,7 +13,7 @@ class TripForm(forms.ModelForm):
     This class defines the ModelForm for the Trip model.
     """
     class Meta:
-        model = Trips
+        model = Trip
         fields = [
                 'trip_name',
                 'traveler',

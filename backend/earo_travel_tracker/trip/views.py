@@ -6,8 +6,6 @@ from django.views.generic import CreateView, UpdateView, DetailView, DeleteView,
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib.auth.mixins import PermissionRequiredMixin as DjangoPermissionRequiredMixin 
-# TODO is the above import really  necessary. Shouldn't django guardian suffice????????????
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models import Q
@@ -23,13 +21,13 @@ from rest_framework import viewsets
 from guardian.mixins import PermissionRequiredMixin, PermissionListMixin, LoginRequiredMixin
 from guardian.shortcuts import get_perms
 # Earo_travel_tracker imports
-from traveler.models import TravelerDetails
+from traveler.models import TravelerProfile
 from utils.emailing import send_mass_html_mail
 from .models import (
-    Trips, TripTravelerDependants, TripExpenses, TripApproval, TripItinerary, ApprovalGroups
+    Trip, TripTravelerDependants, TripApproval, TripItinerary, ApprovalGroups
     )
 from .serializers import (
-    TripSerializer, TripItinerarySerializer, TripExpensesSerializer, TripApprovalSerializer,
+    TripSerializer, TripItinerarySerializer, TripApprovalSerializer,
     TripTravelerDependantsSerializer, ApprovalGroupsSerializer
     )
 from .forms import TripForm, ApprovalRequestForm, TripApprovalForm, TripItineraryForm
@@ -42,7 +40,7 @@ class TripViewSet(viewsets.ModelViewSet):
     This class implements views for the Trips.
     """
     serializer_class = TripSerializer
-    queryset = Trips.objects.all()
+    queryset = Trip.objects.all()
 
 
 class TripTravelerDependantsViewSet(viewsets.ModelViewSet):
@@ -51,14 +49,6 @@ class TripTravelerDependantsViewSet(viewsets.ModelViewSet):
     """
     serializer_class = TripTravelerDependantsSerializer
     queryset = TripTravelerDependants.objects.all()
-
-
-class TripExpensesViewSet(viewsets.ModelViewSet):
-    """
-    This class implements views for the Trips.
-    """
-    serializer_class = TripExpensesSerializer
-    queryset = TripExpenses.objects.all()
 
 
 class TripApprovalViewSet(viewsets.ModelViewSet):
@@ -94,8 +84,8 @@ class TripCreateView(LoginRequiredMixin, PermissionRequiredMixin,CreateView):
     permission_object = None. This ensures that the PermissionRequiredMixin
     doesn't throw an error.
     """
-    model = Trips
-    permission_required = 'trip.add_trips'
+    model = Trip
+    permission_required = 'trip.add_trip'
     permission_object = None
     accept_global_perms = True
     raise_exception = True
@@ -107,7 +97,7 @@ class TripCreateView(LoginRequiredMixin, PermissionRequiredMixin,CreateView):
 
     def form_valid(self, form):
         trip = form.save(commit=False)
-        trip.traveler = TravelerDetails.objects.get(user_account=self.request.user)
+        trip.traveler = TravelerProfile.objects.get(user_account=self.request.user)
         trip.save()
         return HttpResponseRedirect(self.get_success_url())
 
@@ -117,9 +107,9 @@ class TripUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     This class implements the update view for the Trip model.
     """
     # TODO. approved trips cannot be modified, otherwise they require reapproval. Check if a trip is approved.
-    model = Trips
+    model = Trip
     form_class = TripForm
-    permission_required = 'trip.change_trips'
+    permission_required = 'trip.change_trip'
     raise_exception = True
     pk_url_kwarg = 'trip_id'
     context_object_name = 'trip'
@@ -134,7 +124,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
     This class implements the details view for the Trip model.
     """
     # TODO: check that user is approver or has perm in order to view this view
-    model = Trips
+    model = Trip
     return_403 = True
     itinerary_model = TripItinerary
     pk_url_kwarg = 'trip_id'
@@ -153,7 +143,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         """
         trip = self.get_object()
         user = self.request.user
-        return 'view_trips' in get_perms(user, trip) or self.user_is_approver(trip.traveler)
+        return 'view_trip' in get_perms(user, trip) or self.user_is_approver(trip.traveler)
 
     def get_context_data(self, **kwargs):
         """
@@ -316,10 +306,10 @@ class TripListView(LoginRequiredMixin, PermissionListMixin, ListView):
     """
     This class implements the listing view for the Trip model.
     """
-    model = Trips
+    model = Trip
     context_object_name = 'trips'
     return_403 = True
-    permission_required = 'trip.view_trips'
+    permission_required = 'trip.view_trip'
     template_name = 'trip/view_trips.html'
     extra_context = {
         'page_title': 'My Trips'
@@ -338,7 +328,7 @@ class TripDeleteView(LoginRequiredMixin, DeleteView):
     """
     This class implements the delete view for the Trip model.
     """
-    model = Trips
+    model = Trip
     template_name = 'trip/delete_trip.html'
     extra_context = {
         'page_title': 'Delete Trip'
@@ -366,8 +356,8 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
         Get the trip for which an itinerary leg is to be created.
         """
         try:
-            return Trips.objects.get(id=trip_id)
-        except Trips.DoesNotExist:
+            return Trip.objects.get(id=trip_id)
+        except Trip.DoesNotExist:
             raise Http404
 
     def get(self, request, *args, **kwargs):
@@ -394,7 +384,7 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
 
     def form_valid(self, form, trip_id):
         trip_leg = form.save(commit=False)
-        trip_leg.trip = Trips.objects.get(id=trip_id)
+        trip_leg.trip = Trip.objects.get(id=trip_id)
         trip_leg.save()
         return HttpResponseRedirect(self.get_success_url(trip_id))
 

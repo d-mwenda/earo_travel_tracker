@@ -8,10 +8,10 @@ from django.dispatch import receiver
 # third-party app imports
 from guardian.shortcuts import assign_perm
 # earo_travel_tracker imports
-from trip.models import Trips
+from trip.models import Trip
 
 
-@receiver(post_save, sender=Trips)
+@receiver(post_save, sender=Trip)
 def assign_trip_perms(sender, **kwargs):
     """
     Assign the owner of a trip the rights to a trip instance.

@@ -19,7 +19,6 @@ from django.views.generic import RedirectView
 from django.conf.urls.static import static
 from django.conf import settings
 # Earo_travel_tracker imports
-from traveler.urls import api_url_patterns as traveler_api
 from traveler.urls import urlpatterns as traveler
 from trip.urls import api_url_patterns as trip_api
 from trip.urls import urlpatterns as trip

@@ -11,7 +11,7 @@ from django.conf import settings
 # third-party app imports
 from guardian.shortcuts import assign_perm
 # earo_travel_tracker imports
-from traveler.models import TravelerDetails
+from traveler.models import TravelerProfile
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -21,7 +21,7 @@ def create_traveler_profile(sender, **kwargs):
     """
     instance = kwargs['instance']
     if kwargs['created']:
-        TravelerDetails(
+        TravelerProfile(
                         type_of_traveler='Employee',
                         nationality='Kenyan',
                         contact_telephone='',
