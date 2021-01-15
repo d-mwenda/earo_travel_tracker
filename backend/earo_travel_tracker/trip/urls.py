@@ -6,16 +6,16 @@ from django.urls import path
 from rest_framework import routers
 # Earo_travel_tracker imports
 from .views import (
-    TripViewSet, TripTravelerDependantsViewSet, TripExpensesViewSet, TripApprovalViewSet,
-    TripItineraryViewSet, ApproverGroupsViewSet, TripCreateView, TripDetailView, TripUpdateView,
-    TripDeleteView, TripListView, TripItineraryListView, TripItineraryCreateView,
-    TripItineraryUpdateView, TripItineraryDeleteView, ApproveTripView, TripApprovalListView,
+    TripViewSet, TripTravelerDependantsViewSet, TripApprovalViewSet, TripItineraryViewSet,
+    ApproverGroupsViewSet, TripCreateView, TripDetailView, TripUpdateView, TripDeleteView,
+    TripListView, TripPOETCreateView, TripPOETUpdateView ,TripItineraryListView,
+    TripItineraryCreateView, TripItineraryUpdateView, TripItineraryDeleteView, ApproveTripView,
+    TripApprovalListView,
     )
 
 router = routers.SimpleRouter()
 router.register(r'trips', TripViewSet)
 router.register(r'trip-traveler-dependants', TripTravelerDependantsViewSet)
-router.register(r'trip-expenses', TripExpensesViewSet)
 router.register(r'trip-approval', TripApprovalViewSet)
 router.register(r'trip-itinerary', TripItineraryViewSet)
 router.register(r'trip-approver-groups', ApproverGroupsViewSet)
@@ -30,11 +30,14 @@ urlpatterns = [
     path('list-trips/upcoming', TripApprovalListView.as_view(), {'filter_by': 'upcoming'},
         name='u_list_upcoming_trips'),
     path('list-trips/my-trips', TripListView.as_view(), name='u_list_my_trips'),
-    path('list-trips/awaiting-approval', TripApprovalListView.as_view(), {'filter_by': 'awaiting_approval'},
-        name='u_list_awaiting_approval_trips'),
+    path('list-trips/awaiting-approval', TripApprovalListView.as_view(),
+        {'filter_by': 'awaiting_approval'}, name='u_list_awaiting_approval_trips'),
     path('update-trip/trip=<trip_id>', TripUpdateView.as_view(), name='u_update_trip'),
     path('trip-details/trip=<trip_id>', TripDetailView.as_view(), name='u_trip_details'),
     path('delete-trip', TripDeleteView.as_view(), name='u_delete_trip'),
+    # trip poet
+    path('trip-poet/add/trip=<trip_id>', TripPOETCreateView.as_view(), name='add_poet'),
+    path('trip-poet/update/trip=<trip_id>', TripPOETUpdateView.as_view(), name='update_poet'),
     # trip itinerary
     path('trip-itinerary/new-leg/trip=<trip_id>', TripItineraryCreateView.as_view(),
         name='u_create_trip_itinerary'),
@@ -45,8 +48,6 @@ urlpatterns = [
     path('trip-itinerary/trip=<trip_id>', TripItineraryDeleteView.as_view(),
         name='u_delete_trip_itinerary'),
     # traveler dependants
-    path('trip-traveler-dependants', TripTravelerDependantsViewSet),
-    path('trip-expenses', TripExpensesViewSet),
     # trip approval
     path('trip-approval/approval_request=<approval_id>', ApproveTripView.as_view(),
         name='u_approve_trip'),

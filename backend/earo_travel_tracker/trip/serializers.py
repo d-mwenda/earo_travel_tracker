@@ -4,8 +4,9 @@ This file contains the serializers for the trip app.
 # third party imports
 from rest_framework import serializers
 # earo_travel_tracker imports
-from trip.models import Trips, TripTravelerDependants, TripExpenses, TripApproval, TripItinerary,\
-    ApprovalGroups
+from trip.models import (
+    Trip, TripTravelerDependants, TripApproval, TripItinerary, ApprovalGroups
+)
 
 
 class TripSerializer(serializers.ModelSerializer):
@@ -13,7 +14,7 @@ class TripSerializer(serializers.ModelSerializer):
     This class serializes the Trip model.
     """
     class Meta:
-        model = Trips
+        model = Trip
         fields = ['traveler', 'type_of_travel', 'categories_of_travel', 'mode_of_travel',
                 'reason_for_travel', 'is_mission_critical', 'is_travel_completed']
 
@@ -26,15 +27,6 @@ class TripTravelerDependantsSerializer(serializers.ModelSerializer):
     class Meta:
         model = TripTravelerDependants
         fields = ['trip', 'dependants_travelling']
-
-
-class TripExpensesSerializer(serializers.ModelSerializer):
-    """
-    This class serializes the TripExpenses model.
-    """
-    class Meta:
-        model = TripExpenses
-        fields = ['trip', 'type_of_expense', 'currency', 'amount']
 
 
 class TripApprovalSerializer(serializers.ModelSerializer):

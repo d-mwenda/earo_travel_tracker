@@ -6,30 +6,29 @@ from django.views.generic import CreateView, UpdateView, DetailView, DeleteView,
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib.auth.mixins import PermissionRequiredMixin as DjangoPermissionRequiredMixin 
-# TODO is the above import really  necessary. Shouldn't django guardian suffice????????????
-from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from django.db.models import Q
-from django.http import HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound, Http404
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.contrib import messages
+from django.shortcuts import get_object_or_404
 
 # Third party imports
 from rest_framework import viewsets
 from guardian.mixins import PermissionRequiredMixin, PermissionListMixin, LoginRequiredMixin
 from guardian.shortcuts import get_perms
 # Earo_travel_tracker imports
-from traveler.models import TravelerDetails
+from traveler.models import TravelerProfile
 from utils.emailing import send_mass_html_mail
 from .models import (
-    Trips, TripTravelerDependants, TripExpenses, TripApproval, TripItinerary, ApprovalGroups
+    Trip, TripTravelerDependants, TripApproval, TripItinerary, ApprovalGroups,
+    TripPOET
     )
 from .serializers import (
-    TripSerializer, TripItinerarySerializer, TripExpensesSerializer, TripApprovalSerializer,
+    TripSerializer, TripItinerarySerializer, TripApprovalSerializer,
     TripTravelerDependantsSerializer, ApprovalGroupsSerializer
     )
 from .forms import TripForm, ApprovalRequestForm, TripApprovalForm, TripItineraryForm
@@ -42,7 +41,7 @@ class TripViewSet(viewsets.ModelViewSet):
     This class implements views for the Trips.
     """
     serializer_class = TripSerializer
-    queryset = Trips.objects.all()
+    queryset = Trip.objects.all()
 
 
 class TripTravelerDependantsViewSet(viewsets.ModelViewSet):
@@ -51,14 +50,6 @@ class TripTravelerDependantsViewSet(viewsets.ModelViewSet):
     """
     serializer_class = TripTravelerDependantsSerializer
     queryset = TripTravelerDependants.objects.all()
-
-
-class TripExpensesViewSet(viewsets.ModelViewSet):
-    """
-    This class implements views for the Trips.
-    """
-    serializer_class = TripExpensesSerializer
-    queryset = TripExpenses.objects.all()
 
 
 class TripApprovalViewSet(viewsets.ModelViewSet):
@@ -94,8 +85,9 @@ class TripCreateView(LoginRequiredMixin, PermissionRequiredMixin,CreateView):
     permission_object = None. This ensures that the PermissionRequiredMixin
     doesn't throw an error.
     """
-    model = Trips
-    permission_required = 'trip.add_trips'
+    object = None
+    model = Trip
+    permission_required = 'trip.add_trip'
     permission_object = None
     accept_global_perms = True
     raise_exception = True
@@ -106,20 +98,20 @@ class TripCreateView(LoginRequiredMixin, PermissionRequiredMixin,CreateView):
     }
 
     def form_valid(self, form):
-        trip = form.save(commit=False)
-        trip.traveler = TravelerDetails.objects.get(user_account=self.request.user)
-        trip.save()
+        self.object = form.save(commit=False)
+        self.object.traveler = TravelerProfile.objects.get(user_account=self.request.user)
+        self.object.save()
         return HttpResponseRedirect(self.get_success_url())
 
 
-class TripUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+class TripUpdateView(LoginRequiredMixin, PermissionRequiredMixin, TripUtilsMixin, UpdateView):
     """
     This class implements the update view for the Trip model.
     """
-    # TODO. approved trips cannot be modified, otherwise they require reapproval. Check if a trip is approved.
-    model = Trips
+    object = None
+    model = Trip
     form_class = TripForm
-    permission_required = 'trip.change_trips'
+    permission_required = 'trip.change_trip'
     raise_exception = True
     pk_url_kwarg = 'trip_id'
     context_object_name = 'trip'
@@ -128,15 +120,32 @@ class TripUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
         'page_title': 'Edit Trip'
     }
 
+    def get(self, request, *args, **kwargs):
+        """
+        Check if the trip being modified is approved. If it's already approved, put a
+        message in the request to let the user know the approval will be nullified.
+        """
+        if self.is_approved_trip():
+            messages.warning(request,
+                "This trip has already been approved by at least one approver.\
+                Modifying the trip details will nullify the approval and the trip needs to \
+                be reapproved. If you don't wish to continue, click on the Cancel button."
+                )
+        return super().get(request, *args, **kwargs)
+
+    # def form_valid(self, form):
+        # TODO invalidate the approval.
+
 
 class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, DetailView):
     """
     This class implements the details view for the Trip model.
     """
-    # TODO: check that user is approver or has perm in order to view this view
-    model = Trips
+    model = Trip
     return_403 = True
     itinerary_model = TripItinerary
+    poet_model = TripPOET
+    object = None
     pk_url_kwarg = 'trip_id'
     context_object_name = 'trip'
     template_name = 'trip/trip_details.html'
@@ -149,11 +158,14 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
     def test_func(self):
         """
         Check that the user has permission for the instance or is an approver.
-        TODO add line manager and SMT to allowed. SMT can be granted perms via group
         """
         trip = self.get_object()
+        traveler = trip.traveler
         user = self.request.user
-        return 'view_trips' in get_perms(user, trip) or self.user_is_approver(trip.traveler)
+        return ('view_trip' in get_perms(user, trip) or
+                self.user_is_approver(traveler) or
+                self.is_line_manager(traveler)
+                )
 
     def get_context_data(self, **kwargs):
         """
@@ -162,6 +174,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         """
         context = super().get_context_data(**kwargs)
         context['itinerary'] = self.get_itinerary()
+        context['poet_details'] = self.get_poet()
         context['approval_status'] = self.get_approval_status()
         if context['approval_status'] == 'Not requested':
             context['form'] = self.form_class
@@ -171,25 +184,17 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         """
         Get itinerary legs associated with a trip.
         """
-        pk = self.kwargs.get(self.pk_url_kwarg)
-        queryset = self.itinerary_model.objects.filter(trip=pk)
+        trip_id = self.kwargs.get(self.pk_url_kwarg)
+        queryset = self.itinerary_model.objects.filter(trip=trip_id)
         return queryset
 
-    def get_approval_status(self):
+    def get_poet(self):
         """
-        Check if a trip is approved. This helps in rendering the template
-        so that appropriate buttons and messages are displayed.
+        Get POET details associated with a trip.
         """
-        status = None
-        try:
-            queryset = TripApproval.objects.get(trip=self.get_object())
-            if queryset.trip_is_approved:
-                status = 'Approved'
-            else:
-                status = 'Unapproved'
-        except ObjectDoesNotExist:
-            status = 'Not requested'
-        return status
+        trip_id = self.kwargs.get(self.pk_url_kwarg)
+        queryset = self.poet_model.objects.filter(trip=trip_id)
+        return queryset
 
     def get_success_url(self, trip_id):
         """
@@ -211,7 +216,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
             approval request.
             approver is an instance of settings.USER_MODEL
         """
-        subject_line = f"""Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"""
+        subject_line = f"Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"
         approver_context = {
             'trip': trip,
             'recipient': approver.first_name,
@@ -225,9 +230,11 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
             'trip': trip
         }
 
-        approver_html_message = render_to_string('emails/approval_request_approver.html', approver_context)
+        approver_html_message = render_to_string('emails/approval_request_approver.html',
+                                                approver_context)
         approver_plain_message = strip_tags(approver_html_message)
-        requester_html_message = render_to_string('emails/approval_request_requester.html', requester_context)
+        requester_html_message = render_to_string('emails/approval_request_requester.html',
+                                                requester_context)
         requester_plain_message = strip_tags(requester_html_message)
 
         approver_mail = (
@@ -296,30 +303,29 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         """
         trip = self.get_object()
         if self.user_owns_trip(trip):
+            if not self.is_valid_for_approval():
+                messages.error(request, "This trip cannot be submitted for approval.\
+                    It is missing either POET or Itinerary details.")
+                self.render_to_response(self.get_context_data(form=form))
             form = self.form_class(request.POST)
             if form.is_valid():
                 return self.form_valid(request, trip_id)
             else:
                 messages.error(request, "Form tampering suspected.")
                 return  self.render_to_response(self.get_context_data(form=form))
-
         else:
-            self.extra_context['approval_request_error_message'] = """You cannot submit a request
-                                                                 for a trip you don't own."""
+            messages.error(request, "You cannot submit a request for a trip you don't own.")
             return HttpResponseRedirect(self.get_success_url(trip_id))
-
-    def get(self, request, *args, **kwargs):
-        return super().get(self, request, *args, **kwargs)
 
 
 class TripListView(LoginRequiredMixin, PermissionListMixin, ListView):
     """
     This class implements the listing view for the Trip model.
     """
-    model = Trips
+    model = Trip
     context_object_name = 'trips'
     return_403 = True
-    permission_required = 'trip.view_trips'
+    permission_required = 'trip.view_trip'
     template_name = 'trip/view_trips.html'
     extra_context = {
         'page_title': 'My Trips'
@@ -338,11 +344,91 @@ class TripDeleteView(LoginRequiredMixin, DeleteView):
     """
     This class implements the delete view for the Trip model.
     """
-    model = Trips
+    model = Trip
     template_name = 'trip/delete_trip.html'
     extra_context = {
         'page_title': 'Delete Trip'
     }
+
+
+# Trip POET details
+class TripPOETCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
+    """
+    This class implements the view to add budget details for a trip.
+
+    """
+    model = TripPOET
+    template_name = "trip/add_edit_trip_poet.html"
+    fields = ["project", "task"]
+    trip_id = None
+
+    def get(self, request, *args, **kwargs):
+        """
+        Intercept get request to:
+        1. verify that the logged on user owns the trip
+        2. add the trip instance to the session data
+        """
+        trip_id = kwargs.get('trip_id')
+        trip = get_object_or_404(Trip, id=trip_id)
+        if self.user_owns_trip(trip):
+            request.session['trip_id'] = trip.id
+            return super().get(request, *args, **kwargs)
+        return HttpResponseForbidden()
+
+    def post(self, request, *args, **kwargs):
+        self.trip_id = request.session.get("trip_id")
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        poet = form.save(commit=False)
+        poet.trip = Trip.objects.get(id=self.trip_id)
+        poet.save()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse_lazy('u_trip_details', kwargs={'trip_id': self.trip_id})
+
+class TripPOETUpdateView(LoginRequiredMixin, TripUtilsMixin, UpdateView):
+    """
+    Update an instance of Trip POET Details.
+    """
+    model = TripPOET
+    template_name = "trip/add_edit_trip_poet.html"
+    fields = ["project", "task"]
+    trip_id = None
+
+    def get(self, request, *args, **kwargs):
+        """
+        Intercept get request to:
+        1. verify that the logged on user owns the trip
+        2. add the trip instance to the session data
+        """
+        trip_id = kwargs.get('trip_id')
+        trip = get_object_or_404(Trip, id=trip_id)
+        if self.user_owns_trip(trip):
+            request.session['trip_id'] = trip.id
+            return super().get(request, *args, **kwargs)
+        return HttpResponseForbidden()
+
+    def post(self, request, *args, **kwargs):
+        self.trip_id = request.session.get("trip_id")
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        poet = form.save(commit=False)
+        poet.trip = Trip.objects.get(id=self.trip_id)
+        poet.save()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse_lazy('u_trip_details', kwargs={'trip_id': self.trip_id})
+
+
+class TripPOETDeleteView(LoginRequiredMixin, UpdateView):
+    """
+    Delete an instance of Trip POET Details.
+    """
+    template_name = ""
 
 
 # Trip Itinerary
@@ -350,9 +436,7 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
     """
     This class implements the create view for the TripItinerary model.
     """
-    # TODO. Trip Itinerary start and end dates must be bound by trip start and end dates.
     # TODO. implement form class with place holders and no Leg status
-    # TODO. Implement permission_required with the object being the parent trip.
     model = TripItinerary
     form_class = TripItineraryForm
     template_name = 'trip/add_edit_trip_itinerary.html'
@@ -360,15 +444,7 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
         'page_title': 'Trip Itinerary',
         'section_title': 'Add a Leg'
     }
-
-    def get_trip(self, trip_id):
-        """
-        Get the trip for which an itinerary leg is to be created.
-        """
-        try:
-            return Trips.objects.get(id=trip_id)
-        except Trips.DoesNotExist:
-            raise Http404
+    trip_id = None
 
     def get(self, request, *args, **kwargs):
         """
@@ -376,30 +452,24 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
         Use the trip_id from the request in the post
         """
         trip_id = kwargs.get('trip_id')
-        trip = self.get_trip(trip_id)
+        trip = get_object_or_404(Trip, id=trip_id)
         if self.user_owns_trip(trip):
+            request.session['trip'] = trip.id
             return super().get(request)
-        else:
-            return HttpResponseForbidden()
-        request.session['trip'] = kwargs.get(trip_id)
-        return super().get(request)
+        return HttpResponseForbidden()
 
     def post(self, request, *args, **kwargs):
-        form = self.form_class(request.POST)
-        trip_id = request.session.get('trip')
-        if form.is_valid():
-            return self.form_valid(form, trip_id)
-        else:
-            return self.form_invalid(form)
+        self.trip_id = request.session.get('trip')
+        return super().post(request, *args, **kwargs)
 
-    def form_valid(self, form, trip_id):
+    def form_valid(self, form):
         trip_leg = form.save(commit=False)
-        trip_leg.trip = Trips.objects.get(id=trip_id)
+        trip_leg.trip = Trip.objects.get(id=self.trip_id)
         trip_leg.save()
-        return HttpResponseRedirect(self.get_success_url(trip_id))
+        return HttpResponseRedirect(self.get_success_url())
 
-    def get_success_url(self, trip_id):
-        return reverse_lazy('u_trip_details', kwargs={'trip_id': trip_id})
+    def get_success_url(self):
+        return reverse_lazy('u_trip_details', kwargs={'trip_id': self.trip_id})
 
 
 class TripItineraryUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
@@ -420,7 +490,6 @@ class TripItineraryListView(LoginRequiredMixin, PermissionRequiredMixin, ListVie
     """
     This class implements the listing view for the TripItinerary model.
     """
-    # Todo: implement time-based filters for ongoing and upcoming trips
     model = TripItinerary
     context_object_name = 'trip_itinerary'
     return_403 = True

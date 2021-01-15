@@ -5,7 +5,7 @@ from django import forms
 # third-party library imports
 from tempus_dominus.widgets import DatePicker, TimePicker
 # earo_travel_tracker imports
-from .models import Trips, TripApproval, TripItinerary
+from .models import Trip, TripApproval, TripItinerary
 
 
 class TripForm(forms.ModelForm):
@@ -13,7 +13,7 @@ class TripForm(forms.ModelForm):
     This class defines the ModelForm for the Trip model.
     """
     class Meta:
-        model = Trips
+        model = Trip
         fields = [
                 'trip_name',
                 'traveler',
@@ -23,6 +23,7 @@ class TripForm(forms.ModelForm):
                 'start_date',
                 'end_date',
                 'is_mission_critical',
+                'security_level',
                 'scope_of_work',
                 ]
 
@@ -35,8 +36,6 @@ class TripForm(forms.ModelForm):
                                                         ('False', 'No')
                                                         )
                                                 ),
-            # TODO verify that line below is redundant and remove it
-            'traveler': forms.HiddenInput(),
             'start_date': DatePicker(attrs={
                                     'append': 'fa fa-calendar',
                                     'input_toggle': False,
@@ -82,7 +81,9 @@ class TripApprovalForm(forms.ModelForm):
         model = TripApproval
         fields = ['approval_comment', 'trip_is_approved',]
         widgets = {
-            'approval_comment': forms.Textarea(attrs={'cols': 80, 'rows': 5, 'style':'resize: none;'}),
+            'approval_comment': forms.Textarea(attrs={
+                    'cols': 80, 'rows': 5, 'style':'resize: none;'
+                    }),
         }
 
 

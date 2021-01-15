@@ -3,7 +3,7 @@ Forms for the traveler app are defined in this file.
 """
 from django import forms
 # earo_travel_tracker imports
-from .models import TravelerDetails
+from .models import TravelerProfile
 
 
 class TravelerBioForm(forms.ModelForm):
@@ -11,7 +11,7 @@ class TravelerBioForm(forms.ModelForm):
     This class defines the ModelForm for the traveler bio from the TravelerDetails Model.
     """
     class Meta:
-        model = TravelerDetails
+        model = TravelerProfile
         fields = '__all__'
 
     # def __init__(self, *args, **kwargs):
