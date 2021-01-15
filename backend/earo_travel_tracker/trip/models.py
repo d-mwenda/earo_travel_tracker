@@ -56,7 +56,7 @@ class Trip(models.Model):
         """
         Defines the url for the details view of this model.
         """
-        return reverse('u_trip_details', args=(self.id,))
+        return reverse('u_trip_details', args=[str(self.id)])
 
     def __str__(self):
         return self.trip_name
@@ -91,7 +91,6 @@ class TripTravelerDependants(models.Model):
                                     null=False, blank=False)
 
 
-
 class TripApproval(models.Model):
     """
     Approvals for the trips are capture in data models implemented in this class.
@@ -123,7 +122,7 @@ class TripItinerary(models.Model):
 
     TRAVEL_MODES = (
         ('Air', 'Air'),
-        ('Land', 'Land'),
+        ('Road', 'Road'),
         ('Water', 'Water'),
     )
 
@@ -139,7 +138,7 @@ class TripItinerary(models.Model):
 
     def __str__(self):
         return ", ".join([
-                        self.trip.trip_name,
+                    self.trip.trip_name,
                     " - ".join([self.city_of_departure, self.destination]),
                     "Leg"
                     ])
@@ -152,6 +151,22 @@ class TripItinerary(models.Model):
         TODO. This will change when the URL conf of the itinerary changes to include trip ID.
         """
         return reverse('u_trip_details', kwargs={'trip_id':self.trip.id})
+
+    #  TODO fix validation and uncomment this
+    # def clean(self):
+    #     """
+    #     Check that the TripItinerary instance date_of_departure is within the trip dates.
+    #     """
+    #     super().clean()
+        # if self.date_of_departure < self.trip.start_date:
+        #     raise ValidationError("This date cannot be before the trip start date.")
+        # if self.date_of_departure > self.trip.end_date:
+        #     raise ValidationError("This date cannot be later than the trip end date.")
+
+    # def save(self, **kwargs):
+    #     """Add support for custom validation implemented in this model."""
+    #     self.full_clean()
+    #     return super().save(**kwargs)
 
     class Meta:
         verbose_name = "Trip Itinerary"

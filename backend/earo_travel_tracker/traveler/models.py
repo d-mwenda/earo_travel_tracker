@@ -24,7 +24,7 @@ class Departments(models.Model):
         Define the url for model instances.
         """
         return reverse('u_department_details', args=(self.id,))
-    
+
     class Meta:
         verbose_name = "Department"
         verbose_name_plural = "Departments"
@@ -73,6 +73,7 @@ class TravelerProfile(models.Model):
         return self.id
 
     def get_absolute_url(self):
+        """Return the absolute url of the detail view of an instance."""
         return reverse('u_traveler_details', args=(self.id,))
 
     class Meta:

@@ -6,10 +6,11 @@ from django.urls import path
 from rest_framework import routers
 # Earo_travel_tracker imports
 from .views import (
-    TripViewSet, TripTravelerDependantsViewSet, TripApprovalViewSet,
-    TripItineraryViewSet, ApproverGroupsViewSet, TripCreateView, TripDetailView, TripUpdateView,
-    TripDeleteView, TripListView, TripItineraryListView, TripItineraryCreateView,
-    TripItineraryUpdateView, TripItineraryDeleteView, ApproveTripView, TripApprovalListView,
+    TripViewSet, TripTravelerDependantsViewSet, TripApprovalViewSet, TripItineraryViewSet,
+    ApproverGroupsViewSet, TripCreateView, TripDetailView, TripUpdateView, TripDeleteView,
+    TripListView, TripPOETCreateView, TripPOETUpdateView ,TripItineraryListView,
+    TripItineraryCreateView, TripItineraryUpdateView, TripItineraryDeleteView, ApproveTripView,
+    TripApprovalListView,
     )
 
 router = routers.SimpleRouter()
@@ -34,6 +35,9 @@ urlpatterns = [
     path('update-trip/trip=<trip_id>', TripUpdateView.as_view(), name='u_update_trip'),
     path('trip-details/trip=<trip_id>', TripDetailView.as_view(), name='u_trip_details'),
     path('delete-trip', TripDeleteView.as_view(), name='u_delete_trip'),
+    # trip poet
+    path('trip-poet/add/trip=<trip_id>', TripPOETCreateView.as_view(), name='add_poet'),
+    path('trip-poet/update/trip=<trip_id>', TripPOETUpdateView.as_view(), name='update_poet'),
     # trip itinerary
     path('trip-itinerary/new-leg/trip=<trip_id>', TripItineraryCreateView.as_view(),
         name='u_create_trip_itinerary'),

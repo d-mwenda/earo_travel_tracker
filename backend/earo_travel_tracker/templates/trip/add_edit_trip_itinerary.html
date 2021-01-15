@@ -7,7 +7,8 @@
             <div class="card-body"> 
                 <div class="row">
                     {% include 'render_form.html' %}
-                    <button class="form-control btn-theme-primary" type="submit">{{page_title}}</button>
+                    <a href="{% url 'u_trip_details' trip_id=request.session.trip_id %}" class="btn btn-danger float-left">Cancel</a>
+                    <button class="btn btn-theme-primary" type="submit">Save</button>
                 </div> 
             </div>
         </form>

@@ -23,6 +23,7 @@ class TripForm(forms.ModelForm):
                 'start_date',
                 'end_date',
                 'is_mission_critical',
+                'security_level',
                 'scope_of_work',
                 ]
 
@@ -35,8 +36,6 @@ class TripForm(forms.ModelForm):
                                                         ('False', 'No')
                                                         )
                                                 ),
-            # TODO verify that line below is redundant and remove it
-            'traveler': forms.HiddenInput(),
             'start_date': DatePicker(attrs={
                                     'append': 'fa fa-calendar',
                                     'input_toggle': False,
@@ -82,7 +81,9 @@ class TripApprovalForm(forms.ModelForm):
         model = TripApproval
         fields = ['approval_comment', 'trip_is_approved',]
         widgets = {
-            'approval_comment': forms.Textarea(attrs={'cols': 80, 'rows': 5, 'style':'resize: none;'}),
+            'approval_comment': forms.Textarea(attrs={
+                    'cols': 80, 'rows': 5, 'style':'resize: none;'
+                    }),
         }
 
 

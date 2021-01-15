@@ -3,22 +3,24 @@
 {% if messages %}
 <div class="col-12">
   {% for message in messages %}
-  <p class="alert text-center {% if message.tags == 'error' %}alert-danger{%else%}alert-{{message.tags}}{%endif%}">
-    {{message}}
-  </p>
+  <div class="alert text-center {% if message.tags == 'error' %}alert-danger{%else%}alert-{{message.tags}}{%endif%} alert-dismissible fade show">
+    <h6>
+      {{message}}
+    </h6>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
   {% endfor %}
 </div>
 {%endif %}
 <div class="col-md-5 col-lg-4">
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">
+        <h2 class="card-title">
             {{trip.trip_name}} Trip Details
-        </h3>
+        </h2>
         {% if request.user == trip.traveler.user_account %}
-        <span class="float-right">
-          <a href="{% url 'u_update_trip' trip_id=trip.id %}" class="btn btn-secondary right">Modify trip</a>
-        </span>
         {% endif %}
       </div>
       <!-- /.card-header -->
@@ -38,7 +40,21 @@
           <dd class="col-sm-8 text-right">{{trip.start_date}}</dd>
           <dt class="col-sm-4">Is trip mission critical?</dt>
           <dd class="col-sm-8 text-right">{% if trip.is_mission_critical %} Yes {% else %} No {% endif %}</dd>
+          {% if poet_details %}
+            {% for detail in poet_details %}
+            <dt class="col-sm-4">POET details</dt>
+            <dd class="col-sm-8 text-right">{{detail.project}}&nbsp;-&nbsp;{{detail.task}}</dd>
+            {% endfor %}
+          {% endif %}
         </dl>
+        {% if poet_details %}
+        <span class="float-right">
+          <a href="{% url 'add_poet' trip_id=trip.id %}" class="col-sm-8 col-sm-offset-4 text-right"><u>Add more POET Details</u></a>
+        </span><br><br>
+        {% endif %}
+        <span class="float-right">
+          <a href="{% url 'u_update_trip' trip_id=trip.id %}" class="btn btn-outline-primary right">Change Trip Details</a>
+        </span>
       </div>
       <!-- /.card-body -->
       {% if request.user == trip.traveler.user_account %}
@@ -49,15 +65,18 @@
           {% elif approval_status == "Unapproved" %}
             <p>This trip is waiting for Approval</p>
           {% elif approval_status == "Not requested" %}
-            Happy with the trip details?
-            {% if itinerary %}
+            <p>Happy with the trip details?</p>
+            {% if itinerary and poet_details %}
             <form action="" method="POST">
             {% csrf_token %}
             {{ form }}
-              <button type="submit" class="btn btn-secondary float-right">Submit trip for approval</button>
+              <button type="submit" class="btn btn-outline-primary float-right">Submit trip for approval</button>
             </form>
+            {% elif poet_details %}
+            <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-outline-primary float-left">Now add your itinerary</a>
             {% else %}
-            <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-secondary float-right">Now add your itinerary</a>
+            <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-outline-primary float-left">Add your Itinerary</a>
+            <a href="{% url 'add_poet' trip_id=trip.id %}" class="btn btn-outline-primary float-right">Add POET Details</a>
             {% endif %}
           {% endif %}
         </p>
@@ -75,7 +94,7 @@
                 </h3>
                 {% if request.user == trip.traveler.user_account %}
                 <span class="float-right">
-                    <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-theme-primary right">Add a trip leg</a>
+                    <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-outline-primary right">Add a trip leg</a>
                 </span>
                 {% endif %}
             </div>
