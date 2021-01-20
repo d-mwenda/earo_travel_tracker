@@ -6,7 +6,6 @@ from django.views.generic import CreateView, UpdateView, DetailView, DeleteView,
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.db import IntegrityError
 from django.db.models import Q
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.core.mail import send_mail
@@ -24,12 +23,11 @@ from guardian.shortcuts import get_perms
 from traveler.models import TravelerProfile
 from utils.emailing import send_mass_html_mail
 from .models import (
-    Trip, TripTravelerDependants, TripApproval, TripItinerary, ApprovalGroups,
-    TripPOET
+    Trip, TripTravelerDependants, TripApproval, TripItinerary, TripPOET
     )
 from .serializers import (
     TripSerializer, TripItinerarySerializer, TripApprovalSerializer,
-    TripTravelerDependantsSerializer, ApprovalGroupsSerializer
+    TripTravelerDependantsSerializer
     )
 from .forms import TripForm, ApprovalRequestForm, TripApprovalForm, TripItineraryForm
 from .utils import TripUtilsMixin
@@ -66,14 +64,6 @@ class TripItineraryViewSet(viewsets.ModelViewSet):
     """
     serializer_class = TripItinerarySerializer
     queryset = TripItinerary.objects.all()
-
-
-class ApproverGroupsViewSet(viewsets.ModelViewSet):
-    """
-    This class implements views for the Approver Groups
-    """
-    serializer_class = ApprovalGroupsSerializer
-    queryset = ApprovalGroups.objects.all()
 
 
 # Non-API views
@@ -196,7 +186,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         queryset = self.poet_model.objects.filter(trip=trip_id)
         return queryset
 
-    def get_success_url(self, trip_id):
+    def get_success_url(self):
         """
         Return the detail_view of the object after trip approval has been requested.
         This method is also called whenever an error is encountered during processing
@@ -204,7 +194,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         extra context is first set before this method is called.
         """
         return reverse_lazy('u_trip_details',
-                            kwargs={'trip_id': trip_id})
+                            kwargs={'trip_id': self.object.id})
 
     def send_success_emails(self, trip, request, approval_request, approver):
         """
@@ -261,30 +251,21 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
                 troubleshooting.")
             print(f"The following error was encountered when sending the emails: {error}")
 
-    def form_valid(self, request, trip_id):
+    def form_valid(self, request):
         """
         Make an approval request by creating an instance of TripApprval.
         """
-        trip = self.model.objects.get(id=trip_id)
+        trip = self.object
         if self.user_owns_trip(trip):
-            approver = self.get_approver(self.get_object().traveler)
+            security_level = self.get_next_security_level(trip)
+            approver = self.get_approver(trip.traveler, security_level=security_level)
             if approver is not None:
-                try:
-                    approval_request = TripApproval(trip=trip)
-                    approval_request.save()
-                    messages.success(request, """Your request for approval has been sent.""")
-                    print('requesting approval')
-                    # send email to requester and approver
-                    self.send_success_emails(trip, request, approval_request, approver)
+                approval_request = self.request_approval(trip, security_level)
 
-                except IntegrityError:
-                    messages.error(
-                        request,
-                        """An approval request for this trip was already sent earlier.
-                        You can only request for approval once. If you wish to send a reminder,
-                        consider sending an email to your approver."""
-                    )
-                    print('at integrity constraint')
+                # send email to requester and approver
+                self.send_success_emails(trip, request, approval_request, approver)
+                messages.success(request, """Your request for approval has been sent.""")
+                print('requesting approval')
             else:
                 messages.error(request, """We didn't find an approver set for your account.
                             Please contact IT for this to be rectified."""
@@ -292,7 +273,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
                 print("at no approver set")
         else:
             messages.error(request, "You cannot request approval for a trip you don't own.")
-        return HttpResponseRedirect(self.get_success_url(trip_id))
+        return HttpResponseRedirect(self.get_success_url())
 
     def post(self, request, trip_id):
         """
@@ -301,21 +282,19 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         then it checks the approval submission form for validity and calls appropriate methods to
         handle the request depending on the form validity.
         """
-        trip = self.get_object()
-        if self.user_owns_trip(trip):
+        self.object = get_object_or_404(self.model, id=trip_id)
+        if self.user_owns_trip(self.object):
             if not self.is_valid_for_approval():
                 messages.error(request, "This trip cannot be submitted for approval.\
                     It is missing either POET or Itinerary details.")
                 self.render_to_response(self.get_context_data(form=form))
             form = self.form_class(request.POST)
             if form.is_valid():
-                return self.form_valid(request, trip_id)
-            else:
-                messages.error(request, "Form tampering suspected.")
-                return  self.render_to_response(self.get_context_data(form=form))
-        else:
-            messages.error(request, "You cannot submit a request for a trip you don't own.")
-            return HttpResponseRedirect(self.get_success_url(trip_id))
+                return self.form_valid(request)
+            messages.error(request, "Form tampering suspected.")
+            return  self.render_to_response(self.get_context_data(form=form))
+        messages.error(request, "You cannot submit a request for a trip you don't own.")
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class TripListView(LoginRequiredMixin, PermissionListMixin, ListView):

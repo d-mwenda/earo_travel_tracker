@@ -5,13 +5,8 @@ from django.db import models
 from django.conf import settings
 from django.urls import reverse
 # earo_travel_tracker imports
-from traveler.models import TravelerProfile
+from traveler.models import TravelerProfile, LEVELS_OF_SECURITY
 
-LEVELS_OF_SECURITY = (
-    ('1','Level 1'),
-    ('1','Level 2'),
-    ('3','Level 3'),
-)
 
 class Trip(models.Model):
     """
@@ -48,8 +43,11 @@ class Trip(models.Model):
     created_on = models.DateTimeField(auto_now=True, null=False)
     scope_of_work = models.FileField(upload_to="media/uploads/scope_of_work/%Y/%m/%d/",
                             verbose_name="Scope of Work", null=True, blank=False)
-    security_level = models.CharField(max_length=1,null=False, default=1,
-                            choices=LEVELS_OF_SECURITY)
+    security_level = models.CharField(max_length=1,null=False, choices=LEVELS_OF_SECURITY,
+                            default=1)
+    # TODO make default on form = traveler.country_of_duty.security_level). maybe form.initial
+    approval_complete = models.BooleanField(null=False, default=False,
+                            verbose_name="Is approval Complete?")
 
 
     def get_absolute_url(self):
@@ -100,11 +98,13 @@ class TripApproval(models.Model):
     approver = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
                                 on_delete=models.PROTECT, verbose_name="Approved by")
     trip_is_approved = models.BooleanField(null=False, blank=False, default=False,
-                                            verbose_name='Approval')
-    approval_request_date = models.DateField(null=False, blank=True, auto_now_add=True)
+                                verbose_name='Approval')
+    security_level = models.CharField(max_length=1,null=False, choices=LEVELS_OF_SECURITY,
+                                default=1)
+    approval_request_date = models.DateTimeField(null=False, blank=True, auto_now_add=True)
     approval_date = models.DateField(null=True, blank=True)
     approval_comment = models.CharField(max_length=1000, null=True, blank=True,
-                                        verbose_name='Comment')
+                                verbose_name='Comment')
 
     class Meta:
         verbose_name = "Trip Approval"
@@ -171,52 +171,3 @@ class TripItinerary(models.Model):
     class Meta:
         verbose_name = "Trip Itinerary"
         verbose_name_plural = "Trips Itineraries"
-
-
-class ApprovalGroups(models.Model):
-    """
-    This class maintains the data models for approval groups and approvers. This makes it easy to
-    assign and change the approvers for different travelers and travel types.
-    TODO: is this model still important? consider deprecating it.
-    """
-    group = models.CharField(max_length=30, null=False, blank=False)
-    approver = models.ForeignKey(TravelerProfile, null=False, blank=False, on_delete=models.PROTECT)
-
-
-class CountrySecurityLevel(models.Model):
-    """
-    This model lists countries and their associated security levels.
-    """
-    country = models.CharField(max_length=50, null=False, blank=False)
-    security_level = models.CharField(max_length=1, choices=LEVELS_OF_SECURITY, null=False,
-                            blank=False)
-    security_level_3_approver = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
-                            on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.country
-
-    def get_absolute_url(self):
-        """
-        Absolute URL to a Country Security Level instance.
-        """
-        return reverse('u_country_security_level', kwargs={'country': self.country})
-
-    class Meta:
-        verbose_name = "Country Security Level"
-        verbose_name_plural = "Countries Security Levels"
-
-
-class Approver(models.Model):
-    """
-    All users who are designated as approvers have to be stored in the DB table associated with
-    this model as foreign key references to their user account.
-    """
-    approver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False,
-                            blank=False)
-    security_level = models.CharField(max_length=1, choices=LEVELS_OF_SECURITY, null=False,
-                            blank=False, default=1, verbose_name="Security Approval Level")
-
-    class Meta:
-        verbose_name = "Approver"
-        verbose_name_plural = "Approvers"
