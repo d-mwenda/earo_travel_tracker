@@ -91,17 +91,23 @@ class TripTravelerDependants(models.Model):
 
 class TripApproval(models.Model):
     """
-    Approvals for the trips are capture in data models implemented in this class.
-    By default the trip is unapproved.
+    Approvals for the Trips are capture in data models implemented in this class.
+    By default the trip is unapproved when first created.
+
+    security_level defines the security level for which an instance approves.
+    is_valid tells whether an approval or request for approval is valid.
     """
-    trip = models.OneToOneField(Trip, on_delete=models.CASCADE, null=False, blank=False)
+    trip = models.OneToOneField(Trip, on_delete=models.CASCADE, null=False, blank=False,
+                                db_index=True)
+    approval_request_date = models.DateTimeField(null=False, blank=True, auto_now_add=True)
+    is_valid = models.BooleanField(null=False, blank=True, default=True,
+                                verbose_name="Approval validity")
     approver = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
                                 on_delete=models.PROTECT, verbose_name="Approved by")
-    trip_is_approved = models.BooleanField(null=False, blank=False, default=False,
-                                verbose_name='Approval')
     security_level = models.CharField(max_length=1,null=False, choices=LEVELS_OF_SECURITY,
                                 default=1)
-    approval_request_date = models.DateTimeField(null=False, blank=True, auto_now_add=True)
+    trip_is_approved = models.BooleanField(null=False, blank=False, default=False,
+                                verbose_name='Approval')
     approval_date = models.DateField(null=True, blank=True)
     approval_comment = models.CharField(max_length=1000, null=True, blank=True,
                                 verbose_name='Comment')

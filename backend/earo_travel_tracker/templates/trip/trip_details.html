@@ -26,24 +26,26 @@
       <!-- /.card-header -->
       <div class="card-body">
         <dl class="row">
-          <dt class="col-sm-4">Start date</dt>
-          <dd class="col-sm-8 text-right">{{trip.start_date}}</dd>
-          <dt class="col-sm-4">End date</dt>
-          <dd class="col-sm-8 text-right">{{trip.end_date}}</dd>
-          <dt class="col-sm-4">Type of travel</dt>
-          <dd class="col-sm-8 text-right">{{trip.type_of_travel}}</dd>
-          <dt class="col-sm-4">Category of Travel</dt>
-          <dd class="col-sm-8 text-right">{{trip.category_of_travel}}</dd>
-          <dt class="col-sm-4">Reason for Travel</dt>
-          <dd class="col-sm-8 text-right">{{trip.reason_for_travel}}</dd>
-          <dt class="col-sm-4">Start date</dt>
-          <dd class="col-sm-8 text-right">{{trip.start_date}}</dd>
-          <dt class="col-sm-4">Is trip mission critical?</dt>
-          <dd class="col-sm-8 text-right">{% if trip.is_mission_critical %} Yes {% else %} No {% endif %}</dd>
+          <dt class="col-sm-6">Start date</dt>
+          <dd class="col-sm-6 text-right">{{trip.start_date}}</dd>
+          <dt class="col-sm-6">End date</dt>
+          <dd class="col-sm-6 text-right">{{trip.end_date}}</dd>
+          <dt class="col-sm-6">Type of travel</dt>
+          <dd class="col-sm-6 text-right">{{trip.type_of_travel}}</dd>
+          <dt class="col-sm-6">Category of Travel</dt>
+          <dd class="col-sm-6 text-right">{{trip.category_of_travel}}</dd>
+          <dt class="col-sm-6">Reason for Travel</dt>
+          <dd class="col-sm-6 text-right">{{trip.reason_for_travel}}</dd>
+          <dt class="col-sm-6">Trip Security Level</dt>
+          <dd class="col-sm-6 text-right">{{trip.security_level}}</dd>
+          <dt class="col-sm-6">Start date</dt>
+          <dd class="col-sm-6 text-right">{{trip.start_date}}</dd>
+          <dt class="col-sm-6">Is trip mission critical?</dt>
+          <dd class="col-sm-6 text-right">{% if trip.is_mission_critical %} Yes {% else %} No {% endif %}</dd>
           {% if poet_details %}
             {% for detail in poet_details %}
-            <dt class="col-sm-4">POET details</dt>
-            <dd class="col-sm-8 text-right">{{detail.project}}&nbsp;-&nbsp;{{detail.task}}</dd>
+            <dt class="col-sm-6">POET details</dt>
+            <dd class="col-sm-6 text-right">{{detail.project}}&nbsp;-&nbsp;{{detail.task}}&nbsp;<a href="{% url 'update_poet' trip_id=detail.trip.id poet_id=detail.id %}"><u>edit</u></a></dd>
             {% endfor %}
           {% endif %}
         </dl>
@@ -57,31 +59,29 @@
         </span>
       </div>
       <!-- /.card-body -->
-      {% if request.user == trip.traveler.user_account %}
       <div class="card-footer">
-        <p>
           {% if approval_status == "Approved" %}
-          Your trip is approved. <i class="fa fa-smile-o" aria-hidden="true"></i>
-          {% elif approval_status == "Unapproved" %}
-            <p>This trip is waiting for Approval</p>
+          <p>Your trip is approved. <i class="fa fa-smile-o" aria-hidden="true"></i></p>
           {% elif approval_status == "Not requested" %}
-            <p>Happy with the trip details?</p>
-            {% if itinerary and poet_details %}
-            <form action="" method="POST">
-            {% csrf_token %}
-            {{ form }}
-              <button type="submit" class="btn btn-outline-primary float-right">Submit trip for approval</button>
-            </form>
-            {% elif poet_details %}
-            <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-outline-primary float-left">Now add your itinerary</a>
-            {% else %}
-            <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-outline-primary float-left">Add your Itinerary</a>
-            <a href="{% url 'add_poet' trip_id=trip.id %}" class="btn btn-outline-primary float-right">Add POET Details</a>
+            {% if request.user == trip.traveler.user_account %}
+              {% if itinerary and poet_details %}
+              <p>Happy with the trip details?</p>
+              <form action="" method="POST">
+              {% csrf_token %}
+              {{ form }}
+                <button type="submit" class="btn btn-outline-primary float-right">Submit trip for approval</button>
+              </form>
+              {% elif poet_details %}
+              <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-outline-primary float-left">Now add your itinerary</a>
+              {% else %}
+              <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-outline-primary float-left">Add your Itinerary</a>
+              <a href="{% url 'add_poet' trip_id=trip.id %}" class="btn btn-outline-primary float-right">Add POET Details</a>
+              {% endif %}
             {% endif %}
+            {% else %}
+            <p>{{approval_status}}</p>
           {% endif %}
-        </p>
       </div>
-      {% endif %}
     </div>
     <!-- /.card -->
   </div>

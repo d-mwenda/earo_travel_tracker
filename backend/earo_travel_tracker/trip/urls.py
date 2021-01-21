@@ -36,7 +36,8 @@ urlpatterns = [
     path('delete-trip', TripDeleteView.as_view(), name='u_delete_trip'),
     # trip poet
     path('trip-poet/add/trip=<trip_id>', TripPOETCreateView.as_view(), name='add_poet'),
-    path('trip-poet/update/trip=<trip_id>', TripPOETUpdateView.as_view(), name='update_poet'),
+    path('trip-poet/update/<trip_id>/poet=<poet_id>', TripPOETUpdateView.as_view(),
+        name='update_poet'),
     # trip itinerary
     path('trip-itinerary/new-leg/trip=<trip_id>', TripItineraryCreateView.as_view(),
         name='u_create_trip_itinerary'),

@@ -16,8 +16,10 @@ class Approver(models.Model):
     """
     All users who are designated as approvers have to be stored in the DB table associated with
     this model as foreign key references to their user account.
+    All approvers set on other models (Departments, CountrySecurityLevel, TravelerProfile) should
+    be referenced to this model.
     """
-    approver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False,
+    approver = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False,
                             blank=False)
     security_level = models.CharField(max_length=1, choices=LEVELS_OF_SECURITY, null=False,
                             blank=False, default=1, verbose_name="Security Approval Level")
@@ -43,8 +45,11 @@ class Departments(models.Model):
     """
     department = models.CharField(max_length=50, null=False, blank=False, db_index=True)
     description = models.CharField(max_length=200, null=False, blank=False)
-    trip_approver = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
-                            on_delete=models.PROTECT)
+    security_level_1_approver = models.ForeignKey(Approver, on_delete=models.PROTECT,null=True,
+                            blank=True, related_name="security_level_1_approver")
+    security_level_2_approver = models.ForeignKey(Approver, on_delete=models.PROTECT,null=True,
+                            blank=True, related_name="security_level_2_approver")
+
 
     def __str__(self):
         return self.department
@@ -67,8 +72,8 @@ class CountrySecurityLevel(models.Model):
     country = models.CharField(max_length=50, null=False, blank=False)
     security_level = models.CharField(max_length=1, choices=LEVELS_OF_SECURITY, null=False,
                             blank=False)
-    security_level_3_approver = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
-                            on_delete=models.CASCADE)
+    security_level_3_approver = models.ForeignKey(Approver, null=True, blank=True,
+                            on_delete=models.PROTECT)
 
     def __str__(self):
         return self.country
@@ -118,7 +123,7 @@ class TravelerProfile(models.Model):
     is_managed_by = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True,
                                     db_index=True, verbose_name="Line Manager",
                                     related_name='Line_Manager')
-    approver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, blank=True,
+    approver = models.ForeignKey(Approver, on_delete=models.PROTECT, blank=True,
                                 null=True, related_name='trip_approver')
 
     def __str__(self):
@@ -128,7 +133,7 @@ class TravelerProfile(models.Model):
 
     def get_absolute_url(self):
         """Return the absolute url of the detail view of an instance."""
-        return reverse('u_traveler_details', args=(self.id,))
+        return reverse('u_traveler_details', args=[(self.id)])
 
     class Meta:
         verbose_name = "Traveler Profile"

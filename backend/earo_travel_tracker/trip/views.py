@@ -375,6 +375,7 @@ class TripPOETUpdateView(LoginRequiredMixin, TripUtilsMixin, UpdateView):
     template_name = "trip/add_edit_trip_poet.html"
     fields = ["project", "task"]
     trip_id = None
+    pk_url_kwarg = "poet_id"
 
     def get(self, request, *args, **kwargs):
         """
@@ -392,12 +393,6 @@ class TripPOETUpdateView(LoginRequiredMixin, TripUtilsMixin, UpdateView):
     def post(self, request, *args, **kwargs):
         self.trip_id = request.session.get("trip_id")
         return super().post(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        poet = form.save(commit=False)
-        poet.trip = Trip.objects.get(id=self.trip_id)
-        poet.save()
-        return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse_lazy('u_trip_details', kwargs={'trip_id': self.trip_id})
@@ -512,8 +507,12 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         Check that the logged on user is approver for the trip and
          the trip doesn't below to the same user approving.
         """
-        trip = self.get_object().trip
-        return self.user_is_approver(trip.traveler) and self.user_owns_trip(trip) is not True
+        approval = self.get_object()
+        trip = approval.trip
+        return (
+            self.user_is_approver(trip.traveler, security_level=approval.security_level) and
+            self.user_owns_trip(trip) is not True
+        )
 
     def form_valid(self, form):
         """
@@ -523,6 +522,13 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         obj = form.save(commit=False)
         obj.approval_date = timezone.now().date()
         obj.save()
+        next_security_level = self.get_next_security_level(obj.trip)
+        if next_security_level:
+            self.request_approval(obj.trip, next_security_level)
+            # TODO send email to approver
+        else:
+            obj.trip.approval_complete = True
+            obj.trip.save()
         messages.success(self.request, f"You successfully approved the trip titled \
             {obj.trip.trip_name} as requested by {obj.trip.traveler.user_account.first_name} \
             {obj.trip.traveler.user_account.last_name}")
@@ -548,16 +554,17 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         )
         return HttpResponseRedirect(self.get_success_url())
 
-class TripApprovalListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+class TripApprovalListView(LoginRequiredMixin, ListView):
     """
     This class displays trips whose details have been filled and submitted for approval.
     Depending on the url called, there are dfferent keywords to filter the queryset to return the
     desired queryset.
     """
+    # TODO implement permissions here
     model = TripApproval
     context_object_name = 'trips'
     return_403 = True
-    permission_required = 'trip.view_tripitinerary'
+    # permission_required = 'trip.view_tripapproval'
     template_name = 'trip/list_trips.html'
     page_title = None
 
@@ -568,8 +575,8 @@ class TripApprovalListView(LoginRequiredMixin, PermissionRequiredMixin, ListView
         filter_by = kwargs['filter_by']
         user = request.user
         queryset = self.model.objects.filter(
-            Q(trip__traveler__approver=user) |
-            Q(trip__traveler__department__trip_approver=user)
+            Q(trip__traveler__approver__approver=user) |
+            Q(trip__traveler__department__trip_approver__approver=user)
             )
         if filter_by:
             if filter_by == "upcoming":

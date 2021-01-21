@@ -16,39 +16,15 @@ class TripUtilsMixin:
         """
         return bool(trip.traveler.user_account == self.request.user)
 
-    def get_approver(self, traveler, security_level=None):
-        """
-        Get the approver for the logged on user or return None if the user has no
-        approver set.
-        TODO incorporate security level
-        """
-        if traveler.approver is not None:
-            print(traveler.approver) # Debug code
-            return traveler.approver
-        if traveler.department is not None and traveler.department.trip_approver is not None:
-            print("trying to get department approver") # debug code
-            print(traveler.department.trip_approver) # debug code
-            return traveler.department.trip_approver
-        print("no approver")  # debug code
-        return None
-
-    def user_is_approver(self, traveler):
+    def user_is_approver(self, traveler, security_level=1):
         """
         Confirm that the logged on user is the approver for the request.
         """
         user = self.request.user
-        return bool(user == self.get_approver(traveler))
-
-    @staticmethod
-    def get_line_manager(traveler):
-        """
-        Get the line manager of a user or return None if none is set.
-        """
-        if traveler.is_managed_by is not None:
-            print(traveler.is_managed_by) # Debug code
-            return traveler.is_managed_by
-        print("No line manager")  # debug code
-        return None
+        set_approver = self.get_approver(traveler, security_level=security_level)
+        if set_approver is None:
+            return False
+        return bool(user == set_approver.approver)
 
     def is_line_manager(self, traveler):
         """
@@ -66,12 +42,23 @@ class TripUtilsMixin:
 
     def invalidate_trip_approval(self):
         """
-        Reset all approvals for a trip instance.
+        Invalidate all approvals for a trip instance.
         This is especially useful when a user modifies any detail of a trip.
+
+        check if trip is approved, revert to False
+        check all exisiting associated TripApproval instances and invalidate them
+
+        this should be used in a view where the object is a Trip instance.
         """
-        # check if trip.is_approved is true, revert to False
-        # handle existing approval instances
-        pass
+        trip = self.object or self.get_object()
+        if trip.approval_complete:
+            trip.approval_complete = False
+            trip.save()
+        approvals = self.approval_model.objects.filter(trip=trip).filter(is_valid=True)
+        for approval in approvals:
+            approval.is_valid = False
+            approval.save()
+        self.object = trip
 
     def is_valid_for_approval(self):
         """
@@ -87,37 +74,43 @@ class TripUtilsMixin:
     def get_approval_status(self):
         """
         Check which stage in the approval workflow a trip is in.
-        can be
-        Not requested
-        Complete Approval
-        Level 1 Approved
-        Level 3 Approved
+        can be:
+            Not requested
+            Approved
+            Awaiting Level 1 Approval
+            Awaiting Level 2 Approval
+            Awaiting Level 3 Approval
         """
-        status = None
         trip = self.object or self.get_object()
-        queryset = TripApproval.objects.filter(trip=trip)
+
+        # check if trip is already completely approved.
+        if trip.approval_complete:
+            return "Approved"
+
+        # Check which stage the unapproved trip is in the approval process
+        queryset = TripApproval.objects.filter(trip=trip).filter(is_valid=True)
         if queryset:
-            # TODO finish implementing this
-            if queryset.security_level:
-                status = 'Approved'
-            else:
-                status = 'Unapproved'
-        else:
-            status = 'Not requested'
-        return status
+            # get the last approval and check for which security level it belongs.
+            queryset = queryset.order_by("-approval_request_date")[0]
+            if queryset.security_level == str(1):
+                return "Awaiting Level 1 Approval"
+            if queryset.security_level == str(2):
+                return "Awaiting Level 2 Approval"
+            return "Awaiting Level 3 Approval"
+        return 'Not requested'
 
     @staticmethod
     def get_next_security_level(trip):
         """
         Check which is the next approval level and return it.
         """
-        last_approval = TripApproval.objects.filter(trip=trip).order_by("-approval_request_date")[0]
-        if last_approval:
+        approvals = TripApproval.objects.filter(trip=trip).order_by("-approval_request_date")
+        if approvals:
+            last_approval = approvals[0]
             if last_approval.security_level == trip.security_level:
                 return None
             return int(last_approval.security_level) + 1
         return 1
-
 
     @staticmethod
     def request_approval(trip, security_level):
@@ -127,3 +120,41 @@ class TripUtilsMixin:
         approval_request = TripApproval(trip=trip, security_level=security_level)
         approval_request.save()
         return approval_request
+
+    @staticmethod
+    def get_approver(traveler, security_level=1):
+        """
+        Get the approver for the logged on user or return None if the user has no
+        approver set.
+        """
+        # security level 1 approver
+        if security_level == 1:
+            if traveler.approver is not None:
+                print(traveler.approver) # Debug code
+                return traveler.approver
+            if (traveler.department is not None and
+                traveler.department.security_level_1_approver is not None):
+                print("trying to get department approver") # debug code
+                print(traveler.department.security_level_1_approver) # debug code
+                return traveler.department.security_level_1_approver
+            print("no approver")  # debug code
+            return None
+
+        # security level 2 approver
+        if security_level == 2:
+            return traveler.department.security_level_2_approver
+
+        # security level 3 approver
+        if security_level == 3:
+            return traveler.country_of_duty.security_level_3_approver
+
+    @staticmethod
+    def get_line_manager(traveler):
+        """
+        Get the line manager of a user or return None if none is set.
+        """
+        if traveler.is_managed_by is not None:
+            print(traveler.is_managed_by) # Debug code
+            return traveler.is_managed_by
+        print("No line manager")  # debug code
+        return None
