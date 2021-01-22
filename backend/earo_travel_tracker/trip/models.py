@@ -98,7 +98,7 @@ class TripApproval(models.Model):
     is_valid tells whether an approval or request for approval is valid.
     """
     trip = models.OneToOneField(Trip, on_delete=models.CASCADE, null=False, blank=False,
-                                db_index=True)
+                                db_index=True, related_name="trip_approvals")
     approval_request_date = models.DateTimeField(null=False, blank=True, auto_now_add=True)
     is_valid = models.BooleanField(null=False, blank=True, default=True,
                                 verbose_name="Approval validity")

@@ -23,6 +23,7 @@ class Approver(models.Model):
                             blank=False)
     security_level = models.CharField(max_length=1, choices=LEVELS_OF_SECURITY, null=False,
                             blank=False, default=1, verbose_name="Security Approval Level")
+    is_active = models.BooleanField(null=False, blank=True, default=True)
 
     def __str__(self):
         return self.approver

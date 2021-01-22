@@ -25,6 +25,7 @@ from utils.emailing import send_mass_html_mail
 from .models import (
     Trip, TripTravelerDependants, TripApproval, TripItinerary, TripPOET
     )
+from traveler.models import Approver
 from .serializers import (
     TripSerializer, TripItinerarySerializer, TripApprovalSerializer,
     TripTravelerDependantsSerializer
@@ -410,7 +411,6 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
     """
     This class implements the create view for the TripItinerary model.
     """
-    # TODO. implement form class with place holders and no Leg status
     model = TripItinerary
     form_class = TripItineraryForm
     template_name = 'trip/add_edit_trip_itinerary.html'
@@ -564,7 +564,6 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
     model = TripApproval
     context_object_name = 'trips'
     return_403 = True
-    # permission_required = 'trip.view_tripapproval'
     template_name = 'trip/list_trips.html'
     page_title = None
 
@@ -575,7 +574,7 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
         filter_by = kwargs['filter_by']
         user = request.user
         queryset = self.model.objects.filter(
-            Q(trip__traveler__approver__approver=user) |
+            Q(trip__traveler__approver__approver=user) | 
             Q(trip__traveler__department__trip_approver__approver=user)
             )
         if filter_by:
