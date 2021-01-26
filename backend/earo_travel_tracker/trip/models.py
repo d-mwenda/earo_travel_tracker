@@ -5,7 +5,7 @@ from django.db import models
 from django.conf import settings
 from django.urls import reverse
 # earo_travel_tracker imports
-from traveler.models import TravelerProfile, LEVELS_OF_SECURITY
+from traveler.models import TravelerProfile, Approver, LEVELS_OF_SECURITY
 
 
 class Trip(models.Model):
@@ -102,7 +102,7 @@ class TripApproval(models.Model):
     approval_request_date = models.DateTimeField(null=False, blank=True, auto_now_add=True)
     is_valid = models.BooleanField(null=False, blank=True, default=True,
                                 verbose_name="Approval validity")
-    approver = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
+    approver = models.ForeignKey(Approver, blank=False, null=True,
                                 on_delete=models.PROTECT, verbose_name="Approved by")
     security_level = models.CharField(max_length=1,null=False, choices=LEVELS_OF_SECURITY,
                                 default=1)

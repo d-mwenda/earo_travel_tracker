@@ -113,11 +113,11 @@ class TripUtilsMixin:
         return 1
 
     @staticmethod
-    def request_approval(trip, security_level):
+    def request_approval(trip, security_level, approver):
         """
         Create a TripApproval instance and send email to approver and requester.
         """
-        approval_request = TripApproval(trip=trip, security_level=security_level)
+        approval_request = TripApproval(trip=trip, security_level=security_level, approver=approver)
         approval_request.save()
         return approval_request
 

@@ -261,7 +261,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
             security_level = self.get_next_security_level(trip)
             approver = self.get_approver(trip.traveler, security_level=security_level)
             if approver is not None:
-                approval_request = self.request_approval(trip, security_level)
+                approval_request = self.request_approval(trip, security_level, approver)
 
                 # send email to requester and approver
                 self.send_success_emails(trip, request, approval_request, approver)
@@ -524,8 +524,13 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         obj.save()
         next_security_level = self.get_next_security_level(obj.trip)
         if next_security_level:
-            self.request_approval(obj.trip, next_security_level)
-            # TODO send email to approver
+            approver = self.get_approver(obj.trip.traveler, security_level=next_security_level)
+            if approver is not None:
+                self.request_approval(obj.trip, next_security_level, approver)
+                # TODO send email to approver
+            else:
+                pass
+                # TODO send email to requester that they have no approver set
         else:
             obj.trip.approval_complete = True
             obj.trip.save()
@@ -560,7 +565,7 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
     Depending on the url called, there are dfferent keywords to filter the queryset to return the
     desired queryset.
     """
-    # TODO implement permissions here
+    # TODO implement permissions here. User passes test of being an approver
     model = TripApproval
     context_object_name = 'trips'
     return_403 = True
@@ -573,10 +578,11 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
         """
         filter_by = kwargs['filter_by']
         user = request.user
-        queryset = self.model.objects.filter(
-            Q(trip__traveler__approver__approver=user) | 
-            Q(trip__traveler__department__trip_approver__approver=user)
-            )
+        # queryset = self.model.objects.filter(
+        #     Q(trip__traveler__approver__approver=user) |
+        #     Q(trip__traveler__department__trip_approver__approver=user)
+        #     )
+        queryset = self.model.objects.all()
         if filter_by:
             if filter_by == "upcoming":
                 queryset = queryset.filter(trip__start_date__gt = timezone.now().date())
@@ -589,7 +595,7 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
                                 )
                 self.page_title = "Ongoing Trips"
             elif filter_by== 'awaiting_approval':
-                queryset = queryset.filter(trip_is_approved=False)
+                queryset = queryset.filter(trip_is_approved=False).filter(approver__approver=user)
                 self.page_title = "Trips Awaiting Approval"
         self.queryset = queryset
         return super().get(request, *args, **kwargs)
