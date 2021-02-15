@@ -9,7 +9,7 @@ from django.dispatch import receiver
 # third-party app imports
 from guardian.shortcuts import assign_perm
 # earo_travel_tracker imports
-from trip.models import Trip, TripPOET
+from trip.models import Trip, TripPOET, TripItinerary
 
 logger = logging.getLogger(__name__)
 
@@ -29,19 +29,21 @@ def assign_trip_poet_perms(sender, **kwargs):
     """
     Assign the owner of a trip the rights to a trip instance.
     """
-    trip_poet = kwargs['instance']
-    user = trip_poet.trip.traveler.user_account
-    assign_perm('change_trippoet', user, trip_poet)
-    assign_perm('view_trippoet', user, trip_poet)
-    logger.debug("Change permission for the %s instance assigned to trip owner", sender)
+    if kwargs['created']:
+        trip_poet = kwargs['instance']
+        user = trip_poet.trip.traveler.user_account
+        assign_perm('change_trippoet', user, trip_poet)
+        assign_perm('view_trippoet', user, trip_poet)
+        logger.debug("Change permission for the %s instance assigned to trip owner", sender)
 
-@receiver(post_save, sender=TripPOET)
+@receiver(post_save, sender=TripItinerary)
 def assign_trip_itinerary_perms(sender, **kwargs):
     """
     Assign the owner of a trip the rights to a trip instance.
     """
-    trip_itinerary = kwargs['instance']
-    user = trip_itinerary.trip.traveler.user_account
-    assign_perm('change_trippoet', user, trip_itinerary)
-    assign_perm('view_trippoet', user, trip_itinerary)
-    logger.debug("Change permission for the %s instance assigned to trip owner", sender)
+    if kwargs['created']:
+        trip_itinerary = kwargs['instance']
+        user = trip_itinerary.trip.traveler.user_account
+        assign_perm('change_tripitinerary', user, trip_itinerary)
+        assign_perm('view_tripitinerary', user, trip_itinerary)
+        logger.debug("Change permission for the %s instance assigned to trip owner", sender)

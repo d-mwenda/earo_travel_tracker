@@ -6,8 +6,7 @@ from django.views.generic import CreateView, UpdateView, DetailView, DeleteView,
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.db.models import Q
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseRedirect
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -25,7 +24,6 @@ from utils.emailing import send_mass_html_mail
 from .models import (
     Trip, TripTravelerDependants, TripApproval, TripItinerary, TripPOET
     )
-from traveler.models import Approver
 from .serializers import (
     TripSerializer, TripItinerarySerializer, TripApprovalSerializer,
     TripTravelerDependantsSerializer
@@ -116,7 +114,7 @@ class TripUpdateView(LoginRequiredMixin, PermissionRequiredMixin, TripUtilsMixin
         Check if the trip being modified is approved. If it's already approved, put a
         message in the request to let the user know the approval will be nullified.
         """
-        if self.is_approved_trip():
+        if self.get_object().approval_complete:
             messages.warning(request,
                 "This trip has already been approved by at least one approver.\
                 Modifying the trip details will nullify the approval and the trip needs to \
@@ -155,7 +153,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         user = self.request.user
         return ('view_trip' in get_perms(user, trip) or
                 self.user_is_approver(traveler) or
-                self.is_line_manager(traveler)
+                traveler.is_managed_by == self.request.user
                 )
 
     def get_context_data(self, **kwargs):
@@ -210,7 +208,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         subject_line = f"Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"
         approver_context = {
             'trip': trip,
-            'recipient': approver.first_name,
+            'recipient': approver.approver.first_name,
             'host': request.get_host(),
             'scheme': request.scheme,
             'approval_request': approval_request,
@@ -233,7 +231,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
             approver_plain_message,
             approver_html_message,
             settings.EMAIL_HOST_USER,
-            [approver.email,],
+            [approver.approver.email,],
         )
         requester_mail = (
             subject_line,
@@ -257,11 +255,11 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         Make an approval request by creating an instance of TripApprval.
         """
         trip = self.object
-        if self.user_owns_trip(trip):
+        if trip.is_owned_by(request.user):
             security_level = self.get_next_security_level(trip)
-            approver = self.get_approver(trip.traveler, security_level=security_level)
+            approver = trip.traveler.get_approver(security_level=security_level)
             if approver is not None:
-                approval_request = self.request_approval(trip, security_level, approver)
+                approval_request = trip.request_approval(security_level, approver)
 
                 # send email to requester and approver
                 self.send_success_emails(trip, request, approval_request, approver)
@@ -284,8 +282,8 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         handle the request depending on the form validity.
         """
         self.object = get_object_or_404(self.model, id=trip_id)
-        if self.user_owns_trip(self.object):
-            if not self.is_valid_for_approval():
+        if self.object.is_owned_by(request.user):
+            if not self.object.is_valid_for_approval():
                 messages.error(request, "This trip cannot be submitted for approval.\
                     It is missing either POET or Itinerary details.")
                 self.render_to_response(self.get_context_data(form=form))
@@ -325,14 +323,25 @@ class TripDeleteView(LoginRequiredMixin, DeleteView):
     This class implements the delete view for the Trip model.
     """
     model = Trip
-    template_name = 'trip/delete_trip.html'
+    template_name = "trip/delete_trip.html"
+    pk_url_kwarg = "trip_id"
     extra_context = {
         'page_title': 'Delete Trip'
     }
+    success_url = reverse_lazy("u_list_my_trips")
+
+    def get(self, request, *args, **kwargs):
+        """
+        Ensure that a trip has not been submitted for approval before
+        deleting it.
+        """
+        if self.object.has_began_approval():
+            pass
+        return super().get(request, *args, **kwargs)
 
 
 # Trip POET details
-class TripPOETCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
+class TripPOETCreateView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, CreateView):
     """
     This class implements the view to add budget details for a trip.
 
@@ -340,63 +349,57 @@ class TripPOETCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
     model = TripPOET
     template_name = "trip/add_edit_trip_poet.html"
     fields = ["project", "task"]
-    trip_id = None
+    trip = None
 
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         """
-        Intercept get request to:
-        1. verify that the logged on user owns the trip
-        2. add the trip instance to the session data
+        add the associated trip to the request.
         """
-        trip_id = kwargs.get('trip_id')
-        trip = get_object_or_404(Trip, id=trip_id)
-        if self.user_owns_trip(trip):
-            request.session['trip_id'] = trip.id
-            return super().get(request, *args, **kwargs)
-        return HttpResponseForbidden()
+        if request.method == "GET":
+            trip_id = kwargs.get('trip_id')
+            request.session['trip_id'] = trip_id
+        else:
+            trip_id = request.session.get("trip_id")
+        self.trip = get_object_or_404(Trip, id=trip_id)
+        return super().dispatch(request, *args, **kwargs)
 
-    def post(self, request, *args, **kwargs):
-        self.trip_id = request.session.get("trip_id")
-        return super().post(request, *args, **kwargs)
+    def test_func(self):
+        """
+        verify that the user creating a POET entry owns the
+        associated trip.
+        """
+        return self.trip.is_owned_by(self.request.user)
+    # TODO remove the below redundant code block
+    # def get(self, request, *args, **kwargs):
+    #     """
+    #     Intercept get request to:
+    #     1. verify that the logged on user owns the trip
+    #     2. add the trip instance to the session data
+    #     # """
+    #     # self.trip_id = kwargs.get('trip_id')
+    #     # trip = get_object_or_404(Trip, id=self.trip_id)
+    #     # request.session['trip_id'] = trip.id
+    #     return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
         poet = form.save(commit=False)
-        poet.trip = Trip.objects.get(id=self.trip_id)
+        poet.trip = self.trip
         poet.save()
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
-        return reverse_lazy('u_trip_details', kwargs={'trip_id': self.trip_id})
+        return reverse_lazy('u_trip_details', kwargs={'trip_id': self.trip.id})
 
-class TripPOETUpdateView(LoginRequiredMixin, TripUtilsMixin, UpdateView):
+
+class TripPOETUpdateView(LoginRequiredMixin, PermissionRequiredMixin, TripUtilsMixin, UpdateView):
     """
     Update an instance of Trip POET Details.
     """
     model = TripPOET
     template_name = "trip/add_edit_trip_poet.html"
     fields = ["project", "task"]
-    trip_id = None
     pk_url_kwarg = "poet_id"
-
-    def get(self, request, *args, **kwargs):
-        """
-        Intercept get request to:
-        1. verify that the logged on user owns the trip
-        2. add the trip instance to the session data
-        """
-        trip_id = kwargs.get('trip_id')
-        trip = get_object_or_404(Trip, id=trip_id)
-        if self.user_owns_trip(trip):
-            request.session['trip_id'] = trip.id
-            return super().get(request, *args, **kwargs)
-        return HttpResponseForbidden()
-
-    def post(self, request, *args, **kwargs):
-        self.trip_id = request.session.get("trip_id")
-        return super().post(request, *args, **kwargs)
-
-    def get_success_url(self):
-        return reverse_lazy('u_trip_details', kwargs={'trip_id': self.trip_id})
+    permission_required = 'trip.change_trippoet'
 
 
 class TripPOETDeleteView(LoginRequiredMixin, UpdateView):
@@ -418,32 +421,52 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
         'page_title': 'Trip Itinerary',
         'section_title': 'Add a Leg'
     }
-    trip_id = None
+    trip = None
 
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         """
-        add trip_id to request for security and prevent user tampering.
-        Use the trip_id from the request in the post
+        add the associated trip to the request.
         """
-        trip_id = kwargs.get('trip_id')
-        trip = get_object_or_404(Trip, id=trip_id)
-        if self.user_owns_trip(trip):
-            request.session['trip'] = trip.id
-            return super().get(request)
-        return HttpResponseForbidden()
+        if request.method == "GET":
+            trip_id = kwargs.get('trip_id')
+            request.session['trip_id'] = trip_id
+        else:
+            trip_id = request.session.get("trip_id")
+        self.trip = get_object_or_404(Trip, id=trip_id)
+        return super().dispatch(request, *args, **kwargs)
 
-    def post(self, request, *args, **kwargs):
-        self.trip_id = request.session.get('trip')
-        return super().post(request, *args, **kwargs)
+    def test_func(self):
+        """
+        verify that the user creating a POET entry owns the
+        associated trip.
+        """
+        return self.trip.is_owned_by(self.request.user)
+
+    # def get(self, request, *args, **kwargs):
+    #     """
+    #     add trip_id to request for security and prevent user tampering.
+    #     Use the trip_id from the request in the post
+    #     """
+    #     trip_id = kwargs.get('trip_id')
+    #     trip = get_object_or_404(Trip, id=trip_id)
+    #     if trip.is_owned_by(request.user):
+    #         # TODO this check can be implemented using user_passes_test, maybe
+    #         request.session['trip'] = trip.id
+    #         return super().get(request)
+    #     return HttpResponseForbidden()
+
+    # def post(self, request, *args, **kwargs):
+    #     self.trip_id = request.session.get('trip')
+    #     return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
         trip_leg = form.save(commit=False)
-        trip_leg.trip = Trip.objects.get(id=self.trip_id)
+        trip_leg.trip = self.trip
         trip_leg.save()
-        return HttpResponseRedirect(self.get_success_url())
+        return HttpResponseRedirect(self.trip.get_absolute_url())
 
-    def get_success_url(self):
-        return reverse_lazy('u_trip_details', kwargs={'trip_id': self.trip_id})
+    # def get_success_url(self):
+    #     return reverse_lazy('u_trip_details', kwargs={'trip_id': self.trip_id})
 
 
 class TripItineraryUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
@@ -493,8 +516,8 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
     model = TripApproval
     form_class = TripApprovalForm
     context_object_name = 'trip_approval'
-    permission_denied_message = "It seems like you lack the appropriate permissions to approve \
-                            this trip. Please contact IT for help."""
+    permission_denied_message = "It seems like you lack the appropriate permissions to approve "\
+                            "this trip. Please contact IT for help."
     success_url = reverse_lazy('u_list_awaiting_approval_trips')
     pk_url_kwarg = 'approval_id'
     template_name = 'trip/approve_trip.html'
@@ -509,9 +532,17 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         """
         approval = self.get_object()
         trip = approval.trip
+        print("is self approver: ",trip.is_owned_by(self.request.user))
+        print(trip.security_level)
+        print(type(trip.security_level))
+        print("is approver: ", self.user_is_approver(trip.traveler, security_level=approval.security_level))
+        print("approval security level: ", approval.security_level)
+        print("traveler", trip.traveler)
+        print("department level 1 approver", trip.traveler.department.security_level_1_approver)
+        print("approver from get_approver()", approval.trip.traveler.get_approver(security_level=approval.security_level))
         return (
             self.user_is_approver(trip.traveler, security_level=approval.security_level) and
-            self.user_owns_trip(trip) is not True
+            not trip.is_owned_by(self.request.user)
         )
 
     def form_valid(self, form):
@@ -524,13 +555,50 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         obj.save()
         next_security_level = self.get_next_security_level(obj.trip)
         if next_security_level:
-            approver = self.get_approver(obj.trip.traveler, security_level=next_security_level)
+            approver = obj.trip.traveler.get_approver(security_level=next_security_level)
+            # if approver == obj.approver:
+            #     approver = obj.trip.traveler.get_approver(security_level=next_security_level)
+
             if approver is not None:
-                self.request_approval(obj.trip, next_security_level, approver)
-                # TODO send email to approver
+                approval_request = obj.trip.request_approval(next_security_level, approver)
+
+                # send mail
+                context = {
+                'recipient': approver.approver.first_name,
+                'trip': approval_request.trip,
+                'host': self.request.get_host(),
+                'scheme': self.request.scheme,
+                'approval_request': approval_request,
+                }
+                subject = f"Trip Approval Requested: {approval_request.trip.trip_name} beginning on {approval_request.trip.start_date}"
+                html_message = render_to_string('emails/approval_request_approver.html', context)
+                plain_message = strip_tags(html_message)
+                send_mail(
+                subject,
+                plain_message,
+                settings.EMAIL_HOST_USER,
+                [obj.trip.traveler.user_account.email,],
+                fail_silently=False,
+                html_message=html_message
+                )
             else:
-                pass
-                # TODO send email to requester that they have no approver set
+                # Send an email to the user that they have no approver set for the security level
+                context = {
+                'recipient': obj.trip.traveler.user_account.first_name,
+                'security_level': next_security_level,
+                
+                }
+                subject = "No Approver"
+                html_message = render_to_string('emails/no_approver.html', context)
+                plain_message = strip_tags(html_message)
+                send_mail(
+                subject,
+                plain_message,
+                settings.EMAIL_HOST_USER,
+                [obj.trip.traveler.user_account.email,],
+                fail_silently=False,
+                html_message=html_message
+                )
         else:
             obj.trip.approval_complete = True
             obj.trip.save()
@@ -540,7 +608,7 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         # send email appropriately.
         context = {
                 'recipient': obj.trip.traveler.user_account.first_name,
-                'approval_object': obj
+                'approval_object': obj,
             }
         if obj.trip_is_approved:
             subject = "Trip Approved"

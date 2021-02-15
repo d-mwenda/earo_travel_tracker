@@ -2,6 +2,7 @@
 This file provides all view functionality for the traveler app.
 """
 from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
+from django.urls import reverse_lazy
 # Third party apps imports
 from rest_framework import viewsets
 from guardian.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -30,14 +31,24 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
 # classes below are Non-API views
 # Approver
-class ApproverCreateView(LoginRequiredMixin, PermissionRequiredMixin,CreateView):
+class ApproverCreateView(LoginRequiredMixin,CreateView):
     """
     Add Users as approvers. This enables easier permission management for approval views.
+    TODO implement permissions
     """
     permission_required = 'traveler.add_approver'
     model = Approver
     fields = ['approver', 'security_level']
-    template_name = ''
+    template_name = 'traveler/add_edit_approver.html'
+    extra_context = {
+        'page_title': 'Add Approver'
+    }
+
+    def get_success_url(self):
+        """
+        TODO implement detail view and make this redundant
+        """
+        return reverse_lazy('u_list_departments')
 
 
 # Country Security Level

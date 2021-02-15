@@ -18,8 +18,10 @@
         <dd class="col-sm-8">{{department.department}}</dd>
         <dt class="col-sm-4">Description</dt>
         <dd class="col-sm-8"> {{department.description}}</dd>
-        <dt class="col-sm-4">Approver</dt>
-        <dd class="col-sm-8"> {{department.trip_approver.first_name}} {{department.trip_approver.last_name}}</dd>
+        <dt class="col-sm-4">Security Level 1 Approver</dt>
+        <dd class="col-sm-8"> {{department.trip_approver.first_name}} {{department.security_level_1_approver}}</dd>
+        <dt class="col-sm-4"> Security Level 2 Approver</dt>
+        <dd class="col-sm-8"> {{department.trip_approver.first_name}} {{department.security_level_2_approver}}</dd>
         </dd>
       </dl>
     </div>

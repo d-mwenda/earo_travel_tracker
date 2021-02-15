@@ -2,7 +2,6 @@
 Data models for the trip app are defined in this file.
 """
 from django.db import models
-from django.conf import settings
 from django.urls import reverse
 # earo_travel_tracker imports
 from traveler.models import TravelerProfile, Approver, LEVELS_OF_SECURITY
@@ -59,6 +58,53 @@ class Trip(models.Model):
     def __str__(self):
         return self.trip_name
 
+    def is_valid_for_approval(self):
+        """
+        Check that the trip is valid to be approved.
+        """
+        if not TripPOET.objects.filter(trip__id=self.id):
+            return False
+        if not TripItinerary.objects.filter(trip__id=self.id):
+            return False
+        return True
+
+    def is_owned_by(self, user):
+        """
+        Check if a user owns the trip.
+        Takes in a settings.USER_MODEL instance as an argument.
+        """
+        return bool(self.traveler.user_account == user)
+
+    def request_approval(self, security_level, approver):
+        """
+        Create a TripApproval instance and send email to approver and requester.
+        """
+        approval_request = TripApproval(
+            trip=self,
+            security_level=security_level,
+            approver=approver
+        )
+        approval_request.save()
+        return approval_request
+
+    def invalidate_approval(self):
+        """
+        Invalidate all approvals for a trip instance.
+        This is especially useful when a user modifies any detail of a trip.
+
+        check if trip is approved, revert to False
+        check all exisiting associated TripApproval instances and invalidate them
+
+        this should be used in a view where the object is a Trip instance.
+        """
+        if self.approval_complete:
+            self.approval_complete = False
+            self.save()
+        approvals = TripApproval.objects.filter(trip=self).filter(is_valid=True)
+        for approval in approvals:
+            approval.is_valid = False
+            approval.save()
+
     class Meta:
         verbose_name = "Trip"
         verbose_name_plural = "Trips"
@@ -74,6 +120,14 @@ class TripPOET(models.Model):
 
     def __str__(self):
         return self.trip.trip_name
+
+    def get_absolute_url(self):
+        """
+        Unique and permanent url to an instance of this model. Given that there's no plan to
+        implement the Detailview of an Itinerary leg yet, the url will resolve to the Detail
+        View of the trip to which the instance belongs.
+        """
+        return reverse('u_trip_details', kwargs={'trip_id':self.trip.id})
 
     class Meta:
         verbose_name = "Trip POET Details"
@@ -97,7 +151,7 @@ class TripApproval(models.Model):
     security_level defines the security level for which an instance approves.
     is_valid tells whether an approval or request for approval is valid.
     """
-    trip = models.OneToOneField(Trip, on_delete=models.CASCADE, null=False, blank=False,
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, null=False, blank=False,
                                 db_index=True, related_name="trip_approvals")
     approval_request_date = models.DateTimeField(null=False, blank=True, auto_now_add=True)
     is_valid = models.BooleanField(null=False, blank=True, default=True,
@@ -154,7 +208,6 @@ class TripItinerary(models.Model):
         Unique and permanent url to an instance of this model. Given that there's no plan to
         implement the Detailview of an Itinerary leg yet, the url will resolve to the Detail
         View of the trip to which the instance belongs.
-        TODO. This will change when the URL conf of the itinerary changes to include trip ID.
         """
         return reverse('u_trip_details', kwargs={'trip_id':self.trip.id})
 

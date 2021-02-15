@@ -14,18 +14,20 @@
   {% endfor %}
 </div>
 {%endif %}
-<div class="col-md-5 col-lg-4">
+<div class="col-sm-12 col-md-6 col-12">
     <div class="card">
       <div class="card-header">
         <h2 class="card-title">
             {{trip.trip_name}} Trip Details
         </h2>
-        {% if request.user == trip.traveler.user_account %}
-        {% endif %}
       </div>
       <!-- /.card-header -->
       <div class="card-body">
         <dl class="row">
+          {% if request.user != trip.traveler.user_account %}
+          <dt class="col-sm-6">Traveler</dt>
+          <dd class="col-sm-6 text-right">{{trip.traveler.user_account.first_name}} {{trip.traveler.user_account.last_name}}</dd>
+          {% endif %}
           <dt class="col-sm-6">Start date</dt>
           <dd class="col-sm-6 text-right">{{trip.start_date}}</dd>
           <dt class="col-sm-6">End date</dt>
@@ -42,13 +44,21 @@
           <dd class="col-sm-6 text-right">{{trip.start_date}}</dd>
           <dt class="col-sm-6">Is trip mission critical?</dt>
           <dd class="col-sm-6 text-right">{% if trip.is_mission_critical %} Yes {% else %} No {% endif %}</dd>
+          <dt class="col-sm-6">Scope of work</dt>
+          <dd class="col-sm-6 text-right"><a href="{{ trip.scope_of_work }}">Scope of Work</a></dd>
           {% if poet_details %}
             {% for detail in poet_details %}
             <dt class="col-sm-6">POET details</dt>
-            <dd class="col-sm-6 text-right">{{detail.project}}&nbsp;-&nbsp;{{detail.task}}&nbsp;<a href="{% url 'update_poet' trip_id=detail.trip.id poet_id=detail.id %}"><u>edit</u></a></dd>
+            <dd class="col-sm-6 text-right">
+              {{detail.project}}&nbsp;-&nbsp;{{detail.task}}&nbsp;
+              {% if request.user == trip.traveler.user_account %}
+              <a href="{% url 'update_poet' trip_id=detail.trip.id poet_id=detail.id %}"><u>edit</u></a>
+              {% endif %}
+            </dd>
             {% endfor %}
           {% endif %}
         </dl>
+        {% if request.user == trip.traveler.user_account %}
         {% if poet_details %}
         <span class="float-right">
           <a href="{% url 'add_poet' trip_id=trip.id %}" class="col-sm-8 col-sm-offset-4 text-right"><u>Add more POET Details</u></a>
@@ -57,11 +67,12 @@
         <span class="float-right">
           <a href="{% url 'u_update_trip' trip_id=trip.id %}" class="btn btn-outline-primary right">Change Trip Details</a>
         </span>
+        {% endif %}
       </div>
       <!-- /.card-body -->
       <div class="card-footer">
           {% if approval_status == "Approved" %}
-          <p>Your trip is approved. <i class="fa fa-smile-o" aria-hidden="true"></i></p>
+          <p>This trip is approved. <i class="fa fa-smile-o" aria-hidden="true"></i></p>
           {% elif approval_status == "Not requested" %}
             {% if request.user == trip.traveler.user_account %}
               {% if itinerary and poet_details %}
@@ -73,6 +84,8 @@
               </form>
               {% elif poet_details %}
               <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-outline-primary float-left">Now add your itinerary</a>
+              {% elif itinerary %}
+              <a href="{% url 'add_poet' trip_id=trip.id %}" class="btn btn-outline-primary float-right">Add POET Details</a>
               {% else %}
               <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-outline-primary float-left">Add your Itinerary</a>
               <a href="{% url 'add_poet' trip_id=trip.id %}" class="btn btn-outline-primary float-right">Add POET Details</a>
@@ -84,51 +97,55 @@
       </div>
     </div>
     <!-- /.card -->
-  </div>
-  {% if itinerary %}
-  <div class="col-md-7 col-lg-8">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    Trip Itinerary
-                </h3>
-                {% if request.user == trip.traveler.user_account %}
-                <span class="float-right">
-                    <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-outline-primary right">Add a trip leg</a>
-                </span>
-                {% endif %}
-            </div>
-            <!-- /.card-header-->
-            <div class="card-body table-responsive p-0">
-                <table class="table table-hover text-nowrap">
-                  <thead>
-                    <tr>
-                      <th>Leg</th>
-                      <th>Mode of Travel</th>
-                      <th>Date of departure</th>
-                      <th>Time of departure</th>
-                      <th>Leg status</th>
-                      <th>Comment</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for leg in itinerary %}
-                    <tr>
-                        <td>{{leg.city_of_departure}} - {{leg.destination}}<a href="{% url 'u_update_trip_itinerary' leg_id=leg.id %}">&nbsp;&nbsp;edit Leg</a></td>
+</div>
+{% if itinerary %}
+<div class="col-sm-12 col-md-12 col-12">
+      <div class="card">
+          <div class="card-header">
+              <h3 class="card-title">
+                  Trip Itinerary
+              </h3>
+              {% if request.user == trip.traveler.user_account %}
+              <span class="float-right">
+                  <a href="{% url 'u_create_trip_itinerary' trip_id=trip.id %}" class="btn btn-outline-primary right">Add a trip leg</a>
+              </span>
+              {% endif %}
+          </div>
+          <!-- /.card-header-->
+          <div class="card-body table-responsive p-0">
+              <table class="table table-hover text-nowrap">
+                <thead>
+                  <tr>
+                    <th>Leg</th>
+                    <th>Mode of Travel</th>
+                    <th>Date of departure</th>
+                    <th>Time of departure</th>
+                    <th>Leg status</th>
+                    <th>Comment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for leg in itinerary %}
+                  <tr>
+                      <td>{{leg.city_of_departure}} - {{leg.destination}}
+                        {% if request.user == trip.traveler.user_account %}
+                        <a href="{% url 'u_update_trip_itinerary' leg_id=leg.id %}">&nbsp;&nbsp;edit Leg</a></td>
+                        {% endif %}
                         <td>{{leg.mode_of_travel}}</td>
-                        <td>{{leg.date_of_departure}}</td>
-                        <td>{{leg.time_of_departure}}</td>
-                        <td>{{leg.leg_status}}</td>
-                        <td>{% if leg.comment %}{{leg.comment}}{% else %}&nbsp;----------&nbsp;{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-              <!-- /.card-body -->
-        </div> 
-  </div>
-  <!-- /.card -->
-  {% endif %}
+                      <td>{{leg.date_of_departure}}</td>
+                      <td>{{leg.time_of_departure}}</td>
+                      <td>{{leg.leg_status}}</td>
+                      <td>{% if leg.comment %}{{leg.comment}}{% else %}&nbsp;----------&nbsp;{% endif %}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <!-- /.card-body -->
+      </div>
+      <!-- /.card -->
+</div>
+<!--/.col-->
+{% endif %}
 
 {% endblock content %}

@@ -11,7 +11,7 @@ from django.dispatch import receiver
 from django.conf import settings
 from django.contrib.auth.models import Group
 # third-party app imports
-from guardian.shortcuts import assign_perm
+from guardian.shortcuts import assign_perm, get_anonymous_user
 # earo_travel_tracker imports
 from traveler.models import TravelerProfile
 
@@ -25,7 +25,7 @@ def create_traveler_profile(sender, **kwargs):
     to traveler group.
     """
     user = kwargs['instance']
-    if kwargs['created']:
+    if kwargs['created'] and user != get_anonymous_user():
         profile = TravelerProfile(
                     type_of_traveler='Employee',
                     nationality='Kenyan',
@@ -40,5 +40,5 @@ def create_traveler_profile(sender, **kwargs):
             travelers = Group.objects.get(name='travelers')
             travelers.user_set.add(user)
         except Group.DoesNotExist:
-            logger.error("Travelers group doesn't exist." \
-                "Create the group and assign it the proper permissions")
+            logger.error("Travelers group doesn't exist. " \
+                "Create the group and assign it the proper permissions.")

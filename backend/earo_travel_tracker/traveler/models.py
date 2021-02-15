@@ -26,7 +26,7 @@ class Approver(models.Model):
     is_active = models.BooleanField(null=False, blank=True, default=True)
 
     def __str__(self):
-        return self.approver
+        return " ".join([self.approver.first_name, self.approver.last_name])
 
     def get_absolute_url(self):
         """
@@ -135,6 +135,42 @@ class TravelerProfile(models.Model):
     def get_absolute_url(self):
         """Return the absolute url of the detail view of an instance."""
         return reverse('u_traveler_details', args=[(self.id)])
+
+    def is_line_managed_by(self, user):
+        """
+        Check that the logged on user is the line manager of a traveler.
+        The user argument should be an instance of settings.USER_MODEL
+        """
+        return bool(self.is_managed_by == user)
+
+    def get_approver(self, security_level=1):
+        """
+        Get the approver for a traveler profile, given the security level
+        return None if no approver is set.
+        """
+        # security level 1 approver
+        print("passed arg type:", type(security_level))
+        security_level = int(security_level)
+        if security_level == 1:
+            if self.approver is not None:
+                print(self.approver) # Debug code
+                return self.approver
+            elif (self.department is not None and
+                self.department.security_level_1_approver is not None):
+                print("trying to get department approver") # debug code
+                print(self.department.security_level_1_approver) # debug code
+                return self.department.security_level_1_approver
+
+        # security level 2 approver
+        elif security_level == 2:
+            return self.department.security_level_2_approver
+
+        # security level 3 approver
+        elif security_level == 3:
+            return self.country_of_duty.security_level_3_approver
+        else:
+            print("no approver")  # debug code
+            return None
 
     class Meta:
         verbose_name = "Traveler Profile"
