@@ -10,6 +10,9 @@ from traveler.models import TravelerDetails
 class Command(BaseCommand):
     """
     Definition of the synctravers command.
+
+    This command is redundant as creating traveler profiles is now done by a post save signal on the
+    User model.
     """
     # TODO: command error when any invalid args are passed to the command
     # TODO: implement manage.py synctraveler singleuser run by logged on users with no traver profile

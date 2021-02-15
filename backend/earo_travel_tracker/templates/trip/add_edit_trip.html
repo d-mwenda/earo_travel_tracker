@@ -7,7 +7,10 @@
             <div class="card-body"> 
                 <div class="row">
                     {% include 'render_form.html' %}
-                    <button class="btn btn-theme-primary" type="submit">Save</button>
+                    <div class="col-12">
+                        <a href="{% url 'u_list_my_trips' %}" class="btn btn-outline-danger float-left">Cancel</a>
+                        <button class="btn btn-outline-primary float-right" type="submit">Save</button>
+                    </div>
                 </div> 
             </div>
         </form>

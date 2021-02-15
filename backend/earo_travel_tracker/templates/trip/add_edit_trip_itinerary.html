@@ -7,8 +7,10 @@
             <div class="card-body"> 
                 <div class="row">
                     {% include 'render_form.html' %}
-                    <a href="{% url 'u_trip_details' trip_id=request.session.trip_id %}" class="btn btn-danger float-left">Cancel</a>
-                    <button class="btn btn-theme-primary" type="submit">Save</button>
+                    <div class="col-12">
+                        <a href="{% url 'u_trip_details' trip_id=request.session.trip %}" class="btn btn-danger float-left">Cancel</a>
+                        <button class="btn btn-theme-primary float-right" type="submit">Save</button>
+                    </div>
                 </div> 
             </div>
         </form>

@@ -5,9 +5,12 @@ from django.urls import path
 # Third party app imports
 from rest_framework import routers
 # Earo_travel_tracker imports
-from .views import TravelerViewSet, DepartmentViewSet, DepartmentCreateView, DepartmentListView, \
-    DepartmentDetailView, DepartmentUpdateView, DepartmentDeleteView, TravelerCreateView, \
-    TravelerListView, TravelerDetailView, TravelerUpdateView
+from .views import (
+    TravelerViewSet, DepartmentViewSet, DepartmentCreateView, DepartmentListView,
+    DepartmentDetailView, DepartmentUpdateView, DepartmentDeleteView, TravelerCreateView,
+    TravelerListView, TravelerDetailView, TravelerUpdateView, CountrySecurityLevelCreateView,
+    ApproverCreateView
+)
 
 
 router = routers.SimpleRouter()
@@ -27,4 +30,8 @@ urlpatterns = [
     path('list-travelers', TravelerListView.as_view(), name='u_list_travelers'),
     path('traveler-profile/traveler=<traveler_id>', TravelerDetailView.as_view(), name='u_traveler_details'),
     path('edit-traveler/traveler=<traveler_id>', TravelerUpdateView.as_view(), name='u_edit_traveler'),
+    # Approver views urls
+    path('new-approver', ApproverCreateView.as_view(), name='create_approver'),
+    # CountrySecurityLevel views urls
+    path('new-country', CountrySecurityLevelCreateView.as_view(), name='create_country'),
 ]

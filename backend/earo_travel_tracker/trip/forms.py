@@ -16,7 +16,6 @@ class TripForm(forms.ModelForm):
         model = Trip
         fields = [
                 'trip_name',
-                'traveler',
                 'type_of_travel',
                 'category_of_travel',
                 'reason_for_travel',

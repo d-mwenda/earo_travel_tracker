@@ -2,11 +2,12 @@
 This file provides all view functionality for the traveler app.
 """
 from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
+from django.urls import reverse_lazy
 # Third party apps imports
 from rest_framework import viewsets
 from guardian.mixins import LoginRequiredMixin, PermissionRequiredMixin
 # Earo_travel_tracker imports
-from .models import TravelerProfile, Departments
+from .models import Approver, CountrySecurityLevel, Departments, TravelerProfile
 from .serializers import TravelerProfileSerializer, DepartmentSerializer
 from .forms import TravelerBioForm
 
@@ -29,6 +30,38 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
 
 # classes below are Non-API views
+# Approver
+class ApproverCreateView(LoginRequiredMixin,CreateView):
+    """
+    Add Users as approvers. This enables easier permission management for approval views.
+    TODO implement permissions
+    """
+    permission_required = 'traveler.add_approver'
+    model = Approver
+    fields = ['approver', 'security_level']
+    template_name = 'traveler/add_edit_approver.html'
+    extra_context = {
+        'page_title': 'Add Approver'
+    }
+
+    def get_success_url(self):
+        """
+        TODO implement detail view and make this redundant
+        """
+        return reverse_lazy('u_list_departments')
+
+
+# Country Security Level
+class CountrySecurityLevelCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """
+    Add countries and their appropriate security levels
+    """
+    permission_required = 'traveler.add_countrysecuritylevel'
+    model = CountrySecurityLevel
+    fields = ['country', 'security_level', 'security_level_3_approver']
+    template_name = ''
+
+
 # Department
 class DepartmentCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     """
@@ -39,7 +72,7 @@ class DepartmentCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateVi
     permission_required = 'traveler.add_departmentsmodel'
     permission_object = None
     model = Departments
-    fields = ['department', 'description', 'trip_approver',]
+    fields = ['department', 'description', 'security_level_1_approver', 'security_level_2_approver']
     template_name = 'traveler/add_edit_department.html'
     extra_context = {
         'page_title': 'Add Department'
@@ -77,7 +110,7 @@ class DepartmentUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateVi
     """
     return_403 = True
     model = Departments
-    fields = ['department', 'description', 'trip_approver',]
+    fields = ['department', 'description', 'security_level_1_approver', 'security_level_2_approver']
     pk_url_kwarg = 'department_id'
     context_object_name = 'department'
     permission_required = 'traveler.change_departmentsmodel'

@@ -12,7 +12,15 @@ class TravelerBioForm(forms.ModelForm):
     """
     class Meta:
         model = TravelerProfile
-        fields = '__all__'
+        fields = [
+            "department",
+            "type_of_traveler",
+            "nationality",
+            "country_of_duty",
+            "contact_telephone",
+            "is_managed_by",
+            "approver",
+        ]
 
     # def __init__(self, *args, **kwargs):
     #     super(TravelerBioForm, self).__init__(*args, **kwargs)
