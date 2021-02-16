@@ -126,6 +126,8 @@ class DepartmentDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteVi
     View all departments.
     """
     model = Departments
+    permission_required = "traveler.delete_department"
+    return_403 = True
 
 
 # Travelers
@@ -136,6 +138,7 @@ class TravelerCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView
     model = TravelerProfile
     form_class = TravelerBioForm
     permission_required = 'traveler.create_travelerdetails'
+    return_403 = True
     permission_object = None
     template_name = 'traveler/add_edit_traveler.html'
     extra_context = {
@@ -150,6 +153,7 @@ class TravelerListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = TravelerProfile
     context_object_name = 'travelers'
     permission_required = 'traveler.view_travelerdetails'
+    return_403 = True
     template_name = 'traveler/list_travelers.html'
     extra_context = {
         'page_title': 'All Travelers'
@@ -164,6 +168,7 @@ class TravelerDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView
     pk_url_kwarg = 'traveler_id'
     context_object_name = 'traveler'
     permission_required = 'traveler.view_travelerdetails'
+    return_403 = True
     template_name = 'traveler/traveler_profile.html'
     extra_context = {
         'page_title': 'Traveler Profile'

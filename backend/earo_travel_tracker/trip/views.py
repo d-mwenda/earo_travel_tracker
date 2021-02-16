@@ -80,6 +80,7 @@ class TripCreateView(LoginRequiredMixin, PermissionRequiredMixin,CreateView):
     permission_object = None
     accept_global_perms = True
     raise_exception = True
+    return_403 = True
     form_class = TripForm
     template_name = 'trip/add_edit_trip.html'
     extra_context = {
@@ -102,6 +103,7 @@ class TripUpdateView(LoginRequiredMixin, PermissionRequiredMixin, TripUtilsMixin
     form_class = TripForm
     permission_required = 'trip.change_trip'
     raise_exception = True
+    return_403 = True
     pk_url_kwarg = 'trip_id'
     context_object_name = 'trip'
     template_name = 'trip/add_edit_trip.html'
@@ -318,12 +320,14 @@ class TripListView(LoginRequiredMixin, PermissionListMixin, ListView):
         return queryset
 
 
-class TripDeleteView(LoginRequiredMixin, DeleteView):
+class TripDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     """
     This class implements the delete view for the Trip model.
     """
     model = Trip
     template_name = "trip/delete_trip.html"
+    permission_required = "trip.delete_trip"
+    return_403 = True
     pk_url_kwarg = "trip_id"
     extra_context = {
         'page_title': 'Delete Trip'
@@ -347,6 +351,7 @@ class TripPOETCreateView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin
 
     """
     model = TripPOET
+    return_403 = True
     template_name = "trip/add_edit_trip_poet.html"
     fields = ["project", "task"]
     trip = None
@@ -396,17 +401,20 @@ class TripPOETUpdateView(LoginRequiredMixin, PermissionRequiredMixin, TripUtilsM
     Update an instance of Trip POET Details.
     """
     model = TripPOET
+    return_403 = True
     template_name = "trip/add_edit_trip_poet.html"
     fields = ["project", "task"]
     pk_url_kwarg = "poet_id"
     permission_required = 'trip.change_trippoet'
 
 
-class TripPOETDeleteView(LoginRequiredMixin, UpdateView):
+class TripPOETDeleteView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     """
     Delete an instance of Trip POET Details.
     """
     template_name = ""
+    return_403 = True
+    permission_required = "trip.delete_trippoet"
 
 
 # Trip Itinerary
@@ -497,11 +505,13 @@ class TripItineraryListView(LoginRequiredMixin, PermissionRequiredMixin, ListVie
     }
 
 
-class TripItineraryDeleteView(LoginRequiredMixin, DeleteView):
+class TripItineraryDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     """
     This class implements the delete view for the Trip model.
     """
     model = TripItinerary
+    permission_required = "trip.delete_tripitinerary"
+    return_403 = True
     template_name = 'trip/delete_trip_leg.html'
     extra_context = {
         'page_title': 'Delete Leg'
@@ -516,6 +526,7 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
     model = TripApproval
     form_class = TripApprovalForm
     context_object_name = 'trip_approval'
+    return_403 = True
     permission_denied_message = "It seems like you lack the appropriate permissions to approve "\
                             "this trip. Please contact IT for help."
     success_url = reverse_lazy('u_list_awaiting_approval_trips')
