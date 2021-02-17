@@ -8,7 +8,7 @@
                 <div class="row">
                     {% include 'render_form.html' %}
                     <div class="col-12">
-                        <a href="{% url 'u_trip_details' trip_id=request.session.trip %}" class="btn btn-danger float-left">Cancel</a>
+                        <a href="{{request.META.HTTP_REFERER}}" class="btn btn-danger float-left">Cancel</a>
                         <button class="btn btn-theme-primary float-right" type="submit">Save</button>
                     </div>
                 </div> 

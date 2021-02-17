@@ -364,7 +364,7 @@ class TripPOETCreateView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin
             trip_id = kwargs.get('trip_id')
             request.session['trip_id'] = trip_id
         else:
-            trip_id = request.session.get("trip_id")
+            trip_id = request.session.pop("trip_id", None)
         self.trip = get_object_or_404(Trip, id=trip_id)
         return super().dispatch(request, *args, **kwargs)
 
@@ -439,7 +439,7 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
             trip_id = kwargs.get('trip_id')
             request.session['trip_id'] = trip_id
         else:
-            trip_id = request.session.get("trip_id")
+            trip_id = request.session.pop("trip_id", None)
         self.trip = get_object_or_404(Trip, id=trip_id)
         return super().dispatch(request, *args, **kwargs)
 
