@@ -45,7 +45,7 @@
           <dt class="col-sm-6">Is trip mission critical?</dt>
           <dd class="col-sm-6 text-right">{% if trip.is_mission_critical %} Yes {% else %} No {% endif %}</dd>
           <dt class="col-sm-6">Scope of work</dt>
-          <dd class="col-sm-6 text-right"><a href="{{ trip.scope_of_work }}">Scope of Work</a></dd>
+          <dd class="col-sm-6 text-right"><a href="{{MEDIA_URL}}{{trip.scope_of_work.url}}">Scope of Work</a></dd>
           {% if poet_details %}
             {% for detail in poet_details %}
             <dt class="col-sm-6">POET details</dt>
