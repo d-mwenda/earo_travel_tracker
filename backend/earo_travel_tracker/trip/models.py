@@ -105,6 +105,44 @@ class Trip(models.Model):
             approval.is_valid = False
             approval.save()
 
+    def get_approval_status(self):
+        """
+        Check which stage in the approval workflow a trip is in.
+        can be:
+            Not requested
+            Approved
+            Awaiting Level 1 Approval
+            Awaiting Level 2 Approval
+            Awaiting Level 3 Approval
+        """
+        # check if trip is already completely approved.
+        if self.approval_complete:
+            return "Approved"
+
+        # Check which stage the unapproved trip is in the approval process
+        queryset = TripApproval.objects.filter(trip__id=self.id).filter(is_valid=True)
+        if queryset:
+            # get the last approval and check for which security level it belongs.
+            queryset = queryset.order_by("-approval_request_date")[0]
+            if queryset.security_level == str(1):
+                return "Awaiting Level 1 Approval"
+            if queryset.security_level == str(2):
+                return "Awaiting Level 2 Approval"
+            return "Awaiting Level 3 Approval"
+        return 'Not requested'
+
+    def get_next_security_level(self):
+        """
+        Check which is the next approval level and return it.
+        """
+        approvals = TripApproval.objects.filter(trip__id=self.id).order_by("-approval_request_date")
+        if approvals:
+            last_approval = approvals[0]
+            if last_approval.security_level == self.security_level:
+                return None
+            return int(last_approval.security_level) + 1
+        return 1
+
     class Meta:
         verbose_name = "Trip"
         verbose_name_plural = "Trips"

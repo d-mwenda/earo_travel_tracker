@@ -13,7 +13,6 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
-
 # Third party imports
 from rest_framework import viewsets
 from guardian.mixins import PermissionRequiredMixin, PermissionListMixin, LoginRequiredMixin
@@ -154,7 +153,9 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         traveler = trip.traveler
         user = self.request.user
         return ('view_trip' in get_perms(user, trip) or
-                self.user_is_approver(traveler) or
+                self.user_is_approver(traveler, security_level=1) or
+                self.user_is_approver(traveler, security_level=2) or
+                self.user_is_approver(traveler, security_level=3) or
                 traveler.is_managed_by == self.request.user
                 )
 
@@ -166,7 +167,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         context = super().get_context_data(**kwargs)
         context['itinerary'] = self.get_itinerary()
         context['poet_details'] = self.get_poet()
-        context['approval_status'] = self.get_approval_status()
+        context['approval_status'] = self.object.get_approval_status()
         if context['approval_status'] == 'Not requested':
             context['form'] = self.form_class
         return context
@@ -255,12 +256,16 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
     def form_valid(self, request):
         """
         Make an approval request by creating an instance of TripApprval.
+        # TODO user cannot submit trip for approval to self
         """
         trip = self.object
         if trip.is_owned_by(request.user):
-            security_level = self.get_next_security_level(trip)
+            security_level = trip.get_next_security_level()
             approver = trip.traveler.get_approver(security_level=security_level)
             if approver is not None:
+                if approver == request:
+                    messages.error(request, f"You are set as your own approver for security level {security_level}. "
+                    "This is not allowed")
                 approval_request = trip.request_approval(security_level, approver)
 
                 # send email to requester and approver
@@ -374,17 +379,6 @@ class TripPOETCreateView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin
         associated trip.
         """
         return self.trip.is_owned_by(self.request.user)
-    # TODO remove the below redundant code block
-    # def get(self, request, *args, **kwargs):
-    #     """
-    #     Intercept get request to:
-    #     1. verify that the logged on user owns the trip
-    #     2. add the trip instance to the session data
-    #     # """
-    #     # self.trip_id = kwargs.get('trip_id')
-    #     # trip = get_object_or_404(Trip, id=self.trip_id)
-    #     # request.session['trip_id'] = trip.id
-    #     return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
         poet = form.save(commit=False)
@@ -449,23 +443,6 @@ class TripItineraryCreateView(LoginRequiredMixin, TripUtilsMixin, CreateView):
         associated trip.
         """
         return self.trip.is_owned_by(self.request.user)
-
-    # def get(self, request, *args, **kwargs):
-    #     """
-    #     add trip_id to request for security and prevent user tampering.
-    #     Use the trip_id from the request in the post
-    #     """
-    #     trip_id = kwargs.get('trip_id')
-    #     trip = get_object_or_404(Trip, id=trip_id)
-    #     if trip.is_owned_by(request.user):
-    #         # TODO this check can be implemented using user_passes_test, maybe
-    #         request.session['trip'] = trip.id
-    #         return super().get(request)
-    #     return HttpResponseForbidden()
-
-    # def post(self, request, *args, **kwargs):
-    #     self.trip_id = request.session.get('trip')
-    #     return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
         trip_leg = form.save(commit=False)
@@ -543,14 +520,14 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         """
         approval = self.get_object()
         trip = approval.trip
-        print("is self approver: ",trip.is_owned_by(self.request.user))
-        print(trip.security_level)
-        print(type(trip.security_level))
-        print("is approver: ", self.user_is_approver(trip.traveler, security_level=approval.security_level))
-        print("approval security level: ", approval.security_level)
-        print("traveler", trip.traveler)
-        print("department level 1 approver", trip.traveler.department.security_level_1_approver)
-        print("approver from get_approver()", approval.trip.traveler.get_approver(security_level=approval.security_level))
+        print("is self approver: ",trip.is_owned_by(self.request.user)) # debug code
+        print(trip.security_level) # debug code
+        print(type(trip.security_level)) # debug code
+        print("is approver: ", self.user_is_approver(trip.traveler, security_level=approval.security_level)) # debug code
+        print("approval security level: ", approval.security_level) # debug code
+        print("traveler", trip.traveler) # debug code
+        print("department level 1 approver", trip.traveler.department.security_level_1_approver) # debug code
+        print("approver from get_approver()", approval.trip.traveler.get_approver(security_level=approval.security_level)) # debug code
         return (
             self.user_is_approver(trip.traveler, security_level=approval.security_level) and
             not trip.is_owned_by(self.request.user)
@@ -564,7 +541,7 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         obj = form.save(commit=False)
         obj.approval_date = timezone.now().date()
         obj.save()
-        next_security_level = self.get_next_security_level(obj.trip)
+        next_security_level = obj.trip.object.get_next_security_level()
         if next_security_level:
             approver = obj.trip.traveler.get_approver(security_level=next_security_level)
             # if approver == obj.approver:
@@ -596,8 +573,7 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
                 # Send an email to the user that they have no approver set for the security level
                 context = {
                 'recipient': obj.trip.traveler.user_account.first_name,
-                'security_level': next_security_level,
-                
+                'security_level': next_security_level,       
                 }
                 subject = "No Approver"
                 html_message = render_to_string('emails/no_approver.html', context)
