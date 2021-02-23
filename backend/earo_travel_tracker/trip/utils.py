@@ -1,7 +1,6 @@
 """
 This file defines utility classes (mostly mixins) used in this app by various views.
 """
-from .models import TripApproval
 
 
 class TripUtilsMixin:

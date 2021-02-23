@@ -198,7 +198,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         return reverse_lazy('u_trip_details',
                             kwargs={'trip_id': self.object.id})
 
-    def send_success_emails(self, trip, request, approval_request, approver):
+    def send_success_emails(self, trip, approval_request, approver):
         """
         Send email to the requester and approver once an approval request is made.
         Args:
@@ -212,8 +212,8 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         approver_context = {
             'trip': trip,
             'recipient': approver.approver.first_name,
-            'host': request.get_host(),
-            'scheme': request.scheme,
+            'host': self.request.get_host(),
+            'scheme': self.request.scheme,
             'approval_request': approval_request,
         }
 
@@ -256,29 +256,24 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
     def form_valid(self, request):
         """
         Make an approval request by creating an instance of TripApprval.
-        # TODO user cannot submit trip for approval to self
         """
         trip = self.object
-        if trip.is_owned_by(request.user):
-            security_level = trip.get_next_security_level()
-            approver = trip.traveler.get_approver(security_level=security_level)
-            if approver is not None:
-                if approver == request:
-                    messages.error(request, f"You are set as your own approver for security level {security_level}. "
-                    "This is not allowed")
-                approval_request = trip.request_approval(security_level, approver)
-
-                # send email to requester and approver
-                self.send_success_emails(trip, request, approval_request, approver)
-                messages.success(request, """Your request for approval has been sent.""")
-                print('requesting approval')
-            else:
-                messages.error(request, """We didn't find an approver set for your account.
-                            Please contact IT for this to be rectified."""
-                )
-                print("at no approver set")
-        else:
+        if not trip.is_owned_by(request.user):
             messages.error(request, "You cannot request approval for a trip you don't own.")
+            return self.render_to_response(self.get_context_data(form=form)) 
+        security_level = trip.get_next_security_level()
+        approver = trip.traveler.get_approver(security_level=security_level)
+        if approver is None:
+            messages.error(request, """We didn't find an approver set for your account.
+                        Please contact IT for this to be rectified.""")
+        if approver == request.user:
+            messages.error(request, "You are set as your own approver for security level"
+                f" {security_level}. This is not allowed")
+            approval_request = trip.request_approval(security_level, approver)
+
+            # send email to requester and approver
+            self.send_success_emails(trip, approval_request, approver)
+            messages.success(request, """Your request for approval has been sent.""")
         return HttpResponseRedirect(self.get_success_url())
 
     def post(self, request, trip_id):
