@@ -4,7 +4,7 @@ Model tests for models in the Traveler app.
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-
+from django.shortcuts import get_object_or_404
 from guardian.shortcuts import get_anonymous_user
 from traveler.models import TravelerProfile
 
@@ -16,7 +16,8 @@ class TestCreateTravelerProfileSignal(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.travelers_group = Group.objects.create(name="travelers")
-        self.user = user_model.objects.create(username='testuser', password="pass1234")
+        user = user_model.objects.create(username='testuser', password="pass1234")
+        self.user = get_object_or_404(user_model, pk=user.id)
         try:
             self.traveler = TravelerProfile.objects.get(user_account=self.user)
         except TravelerProfile.DoesNotExist:
@@ -32,9 +33,9 @@ class TestCreateTravelerProfileSignal(TestCase):
 
     def test_traveler_profile_permission_granted(self):
         """
-        Test that the TravelerPost save signal grants the user permissions to their own profile.
+        Test that the Traveler post save signal grants the user permissions to their own profile.
         """
-        self.assertTrue(self.user.has_perm('traveler.change_travelerprofile', self.traveler))
+        self.assertTrue(self.user.has_perm("change_travelerprofile", self.traveler))
 
     def test_user_added_to_travelers_group(self):
         """

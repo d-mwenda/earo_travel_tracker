@@ -18,11 +18,12 @@ def assign_trip_perms(sender, **kwargs):
     """
     Assign the owner of a trip the rights to a trip instance.
     """
-    trip = kwargs['instance']
-    user = trip.traveler.user_account
-    assign_perm('change_trip', user, trip)
-    assign_perm('view_trip', user, trip)
-    logger.debug("Change permission for the %s instance assigned to trip owner", sender)
+    if kwargs['created']:
+        trip = kwargs['instance']
+        user = trip.traveler.user_account
+        assign_perm('change_trip', user, trip)
+        assign_perm('view_trip', user, trip)
+        logger.debug("Change permission for the %s instance assigned to trip owner", sender)
 
 @receiver(post_save, sender=TripPOET)
 def assign_trip_poet_perms(sender, **kwargs):
