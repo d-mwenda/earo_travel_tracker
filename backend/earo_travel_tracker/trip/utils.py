@@ -16,7 +16,7 @@ class TripUtilsMixin:
         user = self.request.user
         set_approver = traveler.get_approver(security_level=security_level)
         if set_approver is None:
-            print("returning none")
+            print("no approver") # debug code
             return False
-        print("set approver ", set_approver.approver)
+        print("set approver ", set_approver.approver) # debug code
         return bool(user == set_approver.approver)

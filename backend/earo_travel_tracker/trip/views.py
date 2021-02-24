@@ -247,33 +247,38 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         try:
             send_mass_html_mail((approver_mail, requester_mail))
         except SMTPRecipientsRefused as error:
-            messages.error(request, "We were unable to send emails to one or more recipients. \
+            messages.error(self.request, "We were unable to send emails to one or more recipients. \
                 Your approver may not have received the email but they can view the request by \
                 checking their pending approval requests on the system. Please contact IT for \
                 troubleshooting.")
             print(f"The following error was encountered when sending the emails: {error}")
 
-    def form_valid(self, request):
+    def form_valid(self, request, *args, **kwargs):
         """
         Make an approval request by creating an instance of TripApprval.
         """
         trip = self.object
         if not trip.is_owned_by(request.user):
             messages.error(request, "You cannot request approval for a trip you don't own.")
-            return self.render_to_response(self.get_context_data(form=form)) 
+            return self.get(request, *args, **kwargs)
+
         security_level = trip.get_next_security_level()
         approver = trip.traveler.get_approver(security_level=security_level)
         if approver is None:
             messages.error(request, """We didn't find an approver set for your account.
                         Please contact IT for this to be rectified.""")
+            return self.get(request, *args, **kwargs)
+
         if approver == request.user:
             messages.error(request, "You are set as your own approver for security level"
                 f" {security_level}. This is not allowed")
-            approval_request = trip.request_approval(security_level, approver)
+            return self.get(request, *args, **kwargs)
 
-            # send email to requester and approver
-            self.send_success_emails(trip, approval_request, approver)
-            messages.success(request, """Your request for approval has been sent.""")
+        approval_request = trip.request_approval(security_level, approver)
+
+        # send email to requester and approver
+        self.send_success_emails(trip, approval_request, approver)
+        messages.success(request, """Your request for approval has been sent.""")
         return HttpResponseRedirect(self.get_success_url())
 
     def post(self, request, trip_id):
@@ -282,6 +287,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         It makes sure that the request for approval is made by the trip owner,
         then it checks the approval submission form for validity and calls appropriate methods to
         handle the request depending on the form validity.
+        # TODO maybe extract trip_id from kwargs or request
         """
         self.object = get_object_or_404(self.model, id=trip_id)
         if self.object.is_owned_by(request.user):
@@ -533,81 +539,128 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         If the form is valid, update the Approval model and send email to requester.
         If trip was approved send an approval email, otherwise send a disapproval email.
         """
-        obj = form.save(commit=False)
-        obj.approval_date = timezone.now().date()
-        obj.save()
-        next_security_level = obj.trip.object.get_next_security_level()
-        if next_security_level:
-            approver = obj.trip.traveler.get_approver(security_level=next_security_level)
-            # if approver == obj.approver:
-            #     approver = obj.trip.traveler.get_approver(security_level=next_security_level)
+        approval = form.save(commit=False)
+        approval.approval_date = timezone.now().date()
+        approval.save()
 
-            if approver is not None:
-                approval_request = obj.trip.request_approval(next_security_level, approver)
-
-                # send mail
-                context = {
-                'recipient': approver.approver.first_name,
-                'trip': approval_request.trip,
-                'host': self.request.get_host(),
-                'scheme': self.request.scheme,
-                'approval_request': approval_request,
-                }
-                subject = f"Trip Approval Requested: {approval_request.trip.trip_name} beginning on {approval_request.trip.start_date}"
-                html_message = render_to_string('emails/approval_request_approver.html', context)
-                plain_message = strip_tags(html_message)
-                send_mail(
-                subject,
-                plain_message,
-                settings.EMAIL_HOST_USER,
-                [obj.trip.traveler.user_account.email,],
-                fail_silently=False,
-                html_message=html_message
-                )
-            else:
-                # Send an email to the user that they have no approver set for the security level
-                context = {
-                'recipient': obj.trip.traveler.user_account.first_name,
-                'security_level': next_security_level,       
-                }
-                subject = "No Approver"
-                html_message = render_to_string('emails/no_approver.html', context)
-                plain_message = strip_tags(html_message)
-                send_mail(
-                subject,
-                plain_message,
-                settings.EMAIL_HOST_USER,
-                [obj.trip.traveler.user_account.email,],
-                fail_silently=False,
-                html_message=html_message
-                )
-        else:
-            obj.trip.approval_complete = True
-            obj.trip.save()
-        messages.success(self.request, f"You successfully approved the trip titled \
-            {obj.trip.trip_name} as requested by {obj.trip.traveler.user_account.first_name} \
-            {obj.trip.traveler.user_account.last_name}")
-        # send email appropriately.
+        # requester will get at least one of 4 possible email messages
+        requester_email = approval.trip.traveler.user_account.email
+        email_messages = []
         context = {
-                'recipient': obj.trip.traveler.user_account.first_name,
-                'approval_object': obj,
-            }
-        if obj.trip_is_approved:
+            'approval_object': approval,
+        }
+
+        if approval.trip_is_approved:
+            # append success notification message in request
+            messages.success(self.request, f"You successfully approved the trip titled \
+            {approval.trip.trip_name} as requested by {approval.trip.traveler.user_account.first_name} \
+            {approval.trip.traveler.user_account.last_name}")
+
+            # draft success email to requester
             subject = "Trip Approved"
+            context["recipient"] = approval.trip.traveler.user_account.first_name
             html_message = render_to_string('emails/approval_confirmation_approved.html', context)
+            plain_message = strip_tags(html_message)
+            approval_mail = (
+                subject,
+                plain_message,
+                html_message,
+                settings.EMAIL_HOST_USER,
+                [requester_email,],
+            )
+            email_messages.append(approval_mail)
+
+            # make next approval request
+            next_security_level = approval.trip.get_next_security_level()
+            if next_security_level is None: # TODO probably make this a method
+                # mark trip as completely approved
+                approval.trip.approval_complete = True
+                approval.trip.save()
+
+                # TODO draft approval completion email to user
+            else:
+                approver = approval.trip.traveler.get_approver(security_level=next_security_level)
+                # if approver == approval.approver: TODO user cannot be own approver. send error email
+                #     approver = obj.trip.traveler.get_approver(security_level=next_security_level)
+                if approver is not None:
+                    # request approval
+                    approval_request = approval.trip.request_approval(next_security_level, approver)
+                    approval_request.save()
+
+                    # draft email to requester
+                    trip = approval_request.trip
+                    subject = f"Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"
+                    context["trip"] = trip
+                    html_message = render_to_string('emails/approval_request_requester.html', context)
+                    plain_message = strip_tags(html_message)
+                    approval_request_mail = (
+                        subject,
+                        plain_message,
+                        html_message,
+                        settings.EMAIL_HOST_USER,
+                        [requester_email,],
+                        )
+                    email_messages.append(approval_request_mail)
+                    # draft email to next approver
+                    context['recipient'] = approver.approver.first_name
+                    context['host'] = self.request.get_host()
+                    context['scheme'] = self.request.scheme
+                    context['approval_request'] = approval_request
+                    subject = f"Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"
+                    html_message = render_to_string('emails/approval_request_approver.html', context)
+                    plain_message = strip_tags(html_message)
+                    approver_request_mail = (
+                        subject,
+                        plain_message,
+                        html_message,
+                        settings.EMAIL_HOST_USER,
+                        [approver.approver.email,],
+                        )
+                    email_messages.append(approver_request_mail)
+
+                else:
+                    # handle no approver
+                    subject = "No Approver Set"
+                    context['recipient'] = approval.trip.traveler.user_account.first_name
+                    context['security_level'] = next_security_level
+                    html_message = render_to_string('emails/no_approver.html', context)
+                    plain_message = strip_tags(html_message)
+                    no_approver_mail = (
+                        subject,
+                        plain_message,
+                        html_message,
+                        settings.EMAIL_HOST_USER,
+                        [requester_email,],
+                        )
+                    email_messages.append(no_approver_mail)
+
         else:
+            # append success notification message in request
+            messages.success(self.request, f"You successfully declined the trip titled \
+            {approval.trip.trip_name} as requested by {approval.trip.traveler.user_account.first_name} \
+            {approval.trip.traveler.user_account.last_name}")
+
+            # prepare email to requester
             subject = "Trip Declined"
-            html_message = render_to_string('emails/approval_confirmation_approved.html', context)
-        plain_message = strip_tags(html_message)
-        send_mail(
-            subject,
-            plain_message,
-            settings.EMAIL_HOST_USER,
-            [obj.trip.traveler.user_account.email,],
-            fail_silently=False,
-            html_message=html_message
-        )
+            html_message = render_to_string('emails/approval_confirmation_declined.html', context)
+            plain_message = strip_tags(html_message)
+            approval_mail = (
+                subject,
+                plain_message,
+                html_message,
+                settings.EMAIL_HOST_USER,
+                [requester_email,],
+                )
+            email_messages.append(approval_mail)
+
+        # send emails
+        try:
+            send_mass_html_mail(tuple(email_messages))
+        except SMTPRecipientsRefused as error:
+            pass # TODO handle error better
+
         return HttpResponseRedirect(self.get_success_url())
+
 
 class TripApprovalListView(LoginRequiredMixin, ListView):
     """
