@@ -83,7 +83,9 @@ class CountrySecurityLevel(models.Model):
         """
         Absolute URL to a Country Security Level instance.
         """
-        return reverse('u_country_security_level', kwargs={'country': self.country})
+        # TODO fix this to detail view
+        # return reverse('u_country_security_level', kwargs={'country': self.country})
+        return reverse('u_list_departments')
 
     class Meta:
         verbose_name = "Country Security Level"

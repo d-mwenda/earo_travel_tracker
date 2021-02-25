@@ -52,15 +52,17 @@ class ApproverCreateView(LoginRequiredMixin,CreateView):
 
 
 # Country Security Level
-class CountrySecurityLevelCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+class CountrySecurityLevelCreateView(LoginRequiredMixin, CreateView):
     """
     Add countries and their appropriate security levels
+    TODO implement permissions
     """
     permission_required = 'traveler.add_countrysecuritylevel'
     model = CountrySecurityLevel
     fields = ['country', 'security_level', 'security_level_3_approver']
-    template_name = ''
+    template_name = 'traveler/add_edit_country.html'
 
+# TODO implement countrysecurity Detailview
 
 # Department
 class DepartmentCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
