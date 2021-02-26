@@ -51,6 +51,30 @@ class ApproverCreateView(LoginRequiredMixin,CreateView):
         return reverse_lazy('u_list_departments')
 
 
+class ApproverDetailView(LoginRequiredMixin, DetailView):
+    """
+    Show the details of a single country.
+    """
+    model = Approver
+    template_name = "traveler/country_detail.html"
+
+
+class ApproverUpdateView(LoginRequiredMixin, UpdateView):
+    """
+    Update the details of a single country.
+    """
+    model = Approver
+    template_name = "traveler/add_edit_country.html"
+
+
+class ApproverDeleteView(LoginRequiredMixin, DeleteView):
+    """
+    Delete entry of a single country.
+    """
+    model = Approver
+    template_name = "traveler/delete_country.html"
+
+
 # Country Security Level
 class CountrySecurityLevelCreateView(LoginRequiredMixin, CreateView):
     """
@@ -62,7 +86,30 @@ class CountrySecurityLevelCreateView(LoginRequiredMixin, CreateView):
     fields = ['country', 'security_level', 'security_level_3_approver']
     template_name = 'traveler/add_edit_country.html'
 
-# TODO implement countrysecurity Detailview
+
+class CountrySecurityLevelDetailView(LoginRequiredMixin, DetailView):
+    """
+    Show the details of a single country.
+    """
+    model = CountrySecurityLevel
+    template_name = "traveler/country_detail.html"
+
+
+class CountrySecurityLevelUpdateView(LoginRequiredMixin, UpdateView):
+    """
+    Update the details of a single country.
+    """
+    model = CountrySecurityLevel
+    template_name = "traveler/add_edit_country.html"
+
+
+class CountrySecurityLevelDeleteView(LoginRequiredMixin, DeleteView):
+    """
+    Delete entry of a single country.
+    """
+    model = CountrySecurityLevel
+    template_name = "traveler/delete_country.html"
+
 
 # Department
 class DepartmentCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
