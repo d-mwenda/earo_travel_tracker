@@ -1,0 +1,7 @@
+Trip
+- Acceptance Criteria
+- User can create trip
+- User needs appropriate permission to create trip
+- Trip can be modified
+- Trip can be seen/read
+- Approved trip cannot be modified or deleted

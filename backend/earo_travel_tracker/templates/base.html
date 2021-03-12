@@ -128,7 +128,7 @@
               <li class="nav-item">
                 <a href="#" class="nav-link">
                   <i class="fa fa-sitemap" aria-hidden="true"></i>
-                  <p>Departments</p>
+                  <p>Administration</p>
                   <i class="right fas fa-angle-left"></i>
                 </a>
                 <ul class="nav nav-treeview">
@@ -142,6 +142,34 @@
                     <a href="{% url 'u_list_departments' %}" class="nav-link">
                       <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
                       <p>Department Register</p>
+                    </a>
+                  </li>
+                </ul>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item">
+                    <a href="{% url 'create_country' %}" class="nav-link">
+                      <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
+                      <p>Add Country</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'list_countries' %}" class="nav-link">
+                      <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
+                      <p>Countries</p>
+                    </a>
+                  </li>
+                </ul>
+                <ul class="nav nav-treeview">
+                  <li class="nav-item">
+                    <a href="{% url 'create_approver' %}" class="nav-link">
+                      <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
+                      <p>Add Approver</p>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="{% url 'list_approvers' %}" class="nav-link">
+                      <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
+                      <p>Approvers</p>
                     </a>
                   </li>
                 </ul>

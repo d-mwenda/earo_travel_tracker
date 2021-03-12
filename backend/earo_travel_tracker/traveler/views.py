@@ -56,23 +56,41 @@ class ApproverDetailView(LoginRequiredMixin, DetailView):
     Show the details of a single country.
     """
     model = Approver
-    template_name = "traveler/country_detail.html"
+    template_name = "traveler/approver_detail.html"
+    context_object_name = "approver"
+    pk_url_kwarg = "approver_id"
+
+
+class ApproverListView(LoginRequiredMixin, ListView):
+    """
+    Show the details of a single country.
+    """
+    model = Approver
+    template_name = "traveler/list_approvers.html"
+    context_object_name = "approvers"
 
 
 class ApproverUpdateView(LoginRequiredMixin, UpdateView):
     """
     Update the details of a single country.
     """
+    permission_required = 'traveler.add_approver'
     model = Approver
-    template_name = "traveler/add_edit_country.html"
-
-
+    fields = ['approver', 'security_level', 'is_active']
+    template_name = "traveler/add_edit_approver.html"
+    pk_url_kwarg = "approver_id"
+    context_object_name = "approver"
+    extra_context = {
+        'page_title': 'Edit Approver'
+    }
 class ApproverDeleteView(LoginRequiredMixin, DeleteView):
     """
     Delete entry of a single country.
     """
     model = Approver
-    template_name = "traveler/delete_country.html"
+    template_name = "traveler/delete_approver.html"
+    pk_url_kwarg = "approver_id"
+    context_object_name = "approver_id"
 
 
 # Country Security Level
@@ -93,6 +111,17 @@ class CountrySecurityLevelDetailView(LoginRequiredMixin, DetailView):
     """
     model = CountrySecurityLevel
     template_name = "traveler/country_detail.html"
+    pk_url_kwarg = "country_id"
+    context_object_name = "country"
+
+
+class CountrySecurityLevelListView(LoginRequiredMixin, ListView):
+    """
+    Show the details of a single country.
+    """
+    model = CountrySecurityLevel
+    template_name = "traveler/list_countries.html"
+    context_object_name = "countries"
 
 
 class CountrySecurityLevelUpdateView(LoginRequiredMixin, UpdateView):
@@ -100,7 +129,10 @@ class CountrySecurityLevelUpdateView(LoginRequiredMixin, UpdateView):
     Update the details of a single country.
     """
     model = CountrySecurityLevel
+    fields = ['country', 'security_level', 'security_level_3_approver']
     template_name = "traveler/add_edit_country.html"
+    pk_url_kwarg = "country_id"
+    context_object_name = "country"
 
 
 class CountrySecurityLevelDeleteView(LoginRequiredMixin, DeleteView):

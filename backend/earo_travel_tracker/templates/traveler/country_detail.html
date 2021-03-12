@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="col-md-6">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">
+        {{country.country}} Country
+      </h3>
+      <span class="float-right">
+        <a href="{% url 'update_country' country_id=country.id %}" class="btn btn-theme-primary right">Edit Country</a>
+      </span>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-4">Name</dt>
+        <dd class="col-sm-8">{{country.country}}</dd>
+        <dt class="col-sm-4">Description</dt>
+        <dd class="col-sm-8"> {{country.security_level}}</dd>
+        <dt class="col-sm-4">Security Level 1 Approver</dt>
+        <dd class="col-sm-8"> {{country.security_level_3_approver}}</dd>
+        </dd>
+      </dl>
+    </div>
+    <!-- /.card-body -->
+  </div>
+  <!-- /.card -->
+</div>
+{% endblock content %}

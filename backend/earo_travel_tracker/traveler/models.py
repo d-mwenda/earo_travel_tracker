@@ -32,7 +32,7 @@ class Approver(models.Model):
         """
         absolute url to an Approver instance
         """
-        return reverse('approver_details', kwargs={'approver': self.id})
+        return reverse('view_approver', kwargs={'approver_id': self.id})
 
     class Meta:
         verbose_name = "Approver"
@@ -83,9 +83,7 @@ class CountrySecurityLevel(models.Model):
         """
         Absolute URL to a Country Security Level instance.
         """
-        # TODO fix this to detail view
-        # return reverse('u_country_security_level', kwargs={'country': self.country})
-        return reverse('u_list_departments')
+        return reverse('view_country', kwargs={"country_id": self.id})
 
     class Meta:
         verbose_name = "Country Security Level"

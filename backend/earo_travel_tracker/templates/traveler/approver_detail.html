@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="col-md-6">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">
+        View Approver
+      </h3>
+      <span class="float-right">
+        <a href="{% url 'update_approver' approver_id=approver.id %}" class="btn btn-theme-primary right">Edit Approver</a>
+      </span>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-4">Name</dt>
+        <dd class="col-sm-8">{{approver}}</dd>
+        <dt class="col-sm-4">Security Level</dt>
+        <dd class="col-sm-8"> {{approver.security_level}}</dd>
+        <dt class="col-sm-4">Status</dt>
+        <dd class="col-sm-8">{% if approver.is_active %}Active{% else %}Inactive{% endif %}</dd>
+        </dd>
+      </dl>
+    </div>
+    <!-- /.card-body -->
+  </div>
+  <!-- /.card -->
+</div>
+{% endblock content %}
