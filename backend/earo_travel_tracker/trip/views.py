@@ -7,7 +7,6 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import HttpResponseRedirect
-from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
@@ -521,14 +520,6 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         """
         approval = self.get_object()
         trip = approval.trip
-        print("is self approver: ",trip.is_owned_by(self.request.user)) # debug code
-        print(trip.security_level) # debug code
-        print(type(trip.security_level)) # debug code
-        print("is approver: ", self.user_is_approver(trip.traveler, security_level=approval.security_level)) # debug code
-        print("approval security level: ", approval.security_level) # debug code
-        print("traveler", trip.traveler) # debug code
-        print("department level 1 approver", trip.traveler.department.security_level_1_approver) # debug code
-        print("approver from get_approver()", approval.trip.traveler.get_approver(security_level=approval.security_level)) # debug code
         return (
             self.user_is_approver(trip.traveler, security_level=approval.security_level) and
             not trip.is_owned_by(self.request.user)

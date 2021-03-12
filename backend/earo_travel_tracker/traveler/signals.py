@@ -10,6 +10,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 from django.contrib.auth.models import Group
+from django.core.mail import send_mail
+from django.template.loaders import strip_tags, render_to_string
 # third-party app imports
 from guardian.shortcuts import assign_perm, get_anonymous_user
 # earo_travel_tracker imports
@@ -42,3 +44,25 @@ def create_traveler_profile(sender, **kwargs):
         except Group.DoesNotExist:
             logger.error("Travelers group doesn't exist. " \
                 "Create the group and assign it the proper permissions.")
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def alert_admin_initial_login(sender, **kwargs):
+    """
+    Send an email to the administrator the first time a user logs in.
+    """
+    if kwargs["created"]:
+        context = {
+            "user": kwargs["instance"],
+            "subject": "New User Logged On",
+            "recipient": kwargs["instance"].first_name,
+        }
+        html_message = render_to_string("emails/new_user_login.html", context)
+        plain_message = strip_tags(html_message)
+        send_mail(
+            subject=context["subject"],
+            message= plain_message,
+            from_email= settings.EMAIL_HOST_USER,
+            recipient_list=["derick.murithi@crs.org",],
+            fail_silently=True,
+            html_message=html_message
+        )
