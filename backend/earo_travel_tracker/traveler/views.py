@@ -74,7 +74,7 @@ class ApproverUpdateView(LoginRequiredMixin, UpdateView):
     """
     Update the details of a single country.
     """
-    permission_required = 'traveler.add_approver'
+    permission_required = 'traveler.change_approver'
     model = Approver
     fields = ['approver', 'security_level', 'is_active']
     template_name = "traveler/add_edit_approver.html"
@@ -83,6 +83,8 @@ class ApproverUpdateView(LoginRequiredMixin, UpdateView):
     extra_context = {
         'page_title': 'Edit Approver'
     }
+
+
 class ApproverDeleteView(LoginRequiredMixin, DeleteView):
     """
     Delete entry of a single country.
