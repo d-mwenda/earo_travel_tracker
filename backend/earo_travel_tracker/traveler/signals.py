@@ -11,7 +11,8 @@ from django.dispatch import receiver
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.mail import send_mail
-from django.template.loaders import strip_tags, render_to_string
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 # third-party app imports
 from guardian.shortcuts import assign_perm, get_anonymous_user
 # earo_travel_tracker imports

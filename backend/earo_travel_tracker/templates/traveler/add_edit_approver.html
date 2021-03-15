@@ -7,7 +7,10 @@
             <div class="card-body">
                 <div class="row"> 
                     {% include 'render_form.html' %}
-                    <button class="form-control btn-theme-primary" type="submit">Save Approver</button>
+                    <div class="col-12">
+                        <a href="{{request.META.HTTP_REFERER}}" class="btn btn-outline-danger float-left">Cancel</a>
+                        <button class="btn btn-outline-primary float-right" type="submit">Save Approver</button>
+                    </div>
                 </div>
             </div>
         </form>

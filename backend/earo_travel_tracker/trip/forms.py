@@ -2,6 +2,7 @@
 Forms for the trip app are defined in this file.
 """
 from django import forms
+from django.utils import timezone
 # third-party library imports
 from tempus_dominus.widgets import DatePicker, TimePicker
 # earo_travel_tracker imports
@@ -53,6 +54,9 @@ class TripForm(forms.ModelForm):
         cleaned_data = super().clean()
         start_date = cleaned_data.get("start_date")
         end_date = cleaned_data.get("end_date")
+        if start_date < timezone.now().date():
+            msg = "The trip cannot begin in the past."
+            self.add_error('start_date', msg)
         if start_date and end_date and start_date > end_date:
             msg ="The trip end date cannot be earlier than the trip start date."
             self.add_error('end_date', msg)

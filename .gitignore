@@ -60,6 +60,6 @@ testem.log
 *secret_settings.py
 */settings.py
 /media
-*/media
-/uploads
+**/media
+*/uploads
 */wsgi_windows.py
