@@ -39,6 +39,7 @@ urlpatterns = [
     path('traveler/', include(traveler)),
     path('trip/', include(trip)),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('oauth2/', include('django_auth_adfs.urls')),
     # Redirect domain root to List trip
     path('', RedirectView.as_view(pattern_name='u_list_my_trips')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

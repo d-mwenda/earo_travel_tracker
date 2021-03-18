@@ -44,17 +44,21 @@ INSTALLED_APPS = [
     'rest_framework',
     'widget_tweaks',
     'django_python3_ldap',
+    'django_auth_adfs',
     'tempus_dominus',
     'grappelli',
     'guardian',
     # Earo-travel_tracker apps
     'traveler',
     'trip',
+    'user',
 ]
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
+    'django_auth_adfs.backend.AdfsAuthCodeBackend',
+    "django_auth_adfs.backend.AdfsAccessTokenBackend",
     "django_python3_ldap.auth.LDAPBackend",
     "guardian.backends.ObjectPermissionBackend",
 )
@@ -82,6 +86,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'utils.context_processors.get_nav_menu_items',
             ],
         },
     },
@@ -147,7 +152,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = '/media/'
 
-# Logout redirect to Login page
+LOGIN_URL = "django_auth_adfs:login"
+# LOGIN_REDIRECT_URL = 'reverse_lazy('u_list_my_trips')'
 LOGIN_REDIRECT_URL = reverse_lazy('u_list_my_trips')
 LOGOUT_REDIRECT_URL = reverse_lazy('login')
 
@@ -245,3 +251,44 @@ TEMPUS_DOMINUS_LOCALIZE = True
 # django-guardian settings
 GUARDIAN_RENDER_403 = True
 # TODO: design and set GUARDIAN_TEMPLATE_403
+
+# django_auth_adfs
+CLIENT_ID = secret_settings.CLIENT_ID
+CLIENT_SECRET = secret_settings.CLIENT_SECRET
+TENANT_ID = secret_settings.TENANT_ID
+
+AUTH_ADFS = {
+    "AUDIENCE": CLIENT_ID,
+    "CLIENT_ID": CLIENT_ID,
+    "CLIENT_SECRET": CLIENT_SECRET,
+    "CLAIM_MAPPING": {"first_name": "given_name",
+                      "last_name": "family_name",
+                      "email": "email"},
+    "GROUPS_CLAIM": "roles",
+    "MIRROR_GROUPS": True,
+    "USERNAME_CLAIM": "email",
+    "TENANT_ID": TENANT_ID,
+    "RELYING_PARTY_ID": CLIENT_ID,
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(name)s %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
+    },
+    'loggers': {
+        'django_auth_adfs': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}

@@ -5,6 +5,9 @@
     <div class="card">
       <div class="card-header">
         <h3 class="card-title">{{ page_title }}
+          {% if trip %}
+          <p>we have a lift off</p>
+          {% endif %}
         </h3>
         <span class="float-right">
           <a href="{% url 'u_create_trip' %}" class="btn btn-outline-primary right">New Trip</a>
