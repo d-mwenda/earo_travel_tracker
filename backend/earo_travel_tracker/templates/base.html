@@ -110,18 +110,22 @@
                   <i class="right fas fa-angle-left"></i>
                 </a>
                 <ul class="nav nav-treeview">
+                  {% if perms.traveler.add_travelerprofile %}
                   <li class="nav-item">
                     <a href="{% url 'u_create_traveler' %}" class="nav-link">
                       <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
                       <p>Add Traveler</p>
                     </a>
                   </li>
+                  {% endif %}
+                  {% if perms.traveler.view_travelerprofile %}
                   <li class="nav-item">
                     <a href="{% url 'u_list_travelers' %}" class="nav-link">
                       <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
                       <p>Travelers Register</p>
                     </a>
                   </li>
+                  {% endif %}
                 </ul>
               </li>
               
@@ -132,46 +136,58 @@
                   <i class="right fas fa-angle-left"></i>
                 </a>
                 <ul class="nav nav-treeview">
+                  {% if perms.traveler.add_department %}
                   <li class="nav-item">
                     <a href="{% url 'u_create_department' %}" class="nav-link">
                       <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
                       <p>Add Deparment</p>
                     </a>
                   </li>
+                  {% endif %}
+                  {% if perms.traveler.view_department %}
                   <li class="nav-item">
                     <a href="{% url 'u_list_departments' %}" class="nav-link">
                       <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
                       <p>Department Register</p>
                     </a>
                   </li>
+                  {% endif %}
                 </ul>
                 <ul class="nav nav-treeview">
+                  {% if perms.traveler.add_countrysecuritylevel %}
                   <li class="nav-item">
                     <a href="{% url 'create_country' %}" class="nav-link">
                       <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
                       <p>Add Country</p>
                     </a>
                   </li>
+                  {% endif %}
+                  {% if perms.traveler.view_countrysecuritylevel %}
                   <li class="nav-item">
                     <a href="{% url 'list_countries' %}" class="nav-link">
                       <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
                       <p>Countries</p>
                     </a>
                   </li>
+                  {% endif %}
                 </ul>
                 <ul class="nav nav-treeview">
+                  {% if perms.traveler.add_approver %}
                   <li class="nav-item">
                     <a href="{% url 'create_approver' %}" class="nav-link">
                       <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
                       <p>Add Approver</p>
                     </a>
                   </li>
+                  {% endif %}
+                  {% if perms.traveler.view_approver %}
                   <li class="nav-item">
                     <a href="{% url 'list_approvers' %}" class="nav-link">
                       <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
                       <p>Approvers</p>
                     </a>
                   </li>
+                  {% endif %}
                 </ul>
               </li>
             </ul>
