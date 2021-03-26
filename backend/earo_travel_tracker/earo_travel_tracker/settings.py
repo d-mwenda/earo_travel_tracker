@@ -86,7 +86,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'utils.context_processors.get_nav_menu_items',
             ],
         },
     },
@@ -152,8 +151,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = '/media/'
 
-LOGIN_URL = "django_auth_adfs:login"
-# LOGIN_REDIRECT_URL = 'reverse_lazy('u_list_my_trips')'
+# authentication settings
+AUTH_USER_MODEL = 'user.User'
+# LOGIN_URL = "django_auth_adfs:login"
 LOGIN_REDIRECT_URL = reverse_lazy('u_list_my_trips')
 LOGOUT_REDIRECT_URL = reverse_lazy('login')
 
