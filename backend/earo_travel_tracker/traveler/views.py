@@ -45,10 +45,7 @@ class ApproverCreateView(LoginRequiredMixin,CreateView):
     }
 
     def get_success_url(self):
-        """
-        TODO implement detail view and make this redundant
-        """
-        return reverse_lazy('u_list_departments')
+        return reverse_lazy('list_approvers')
 
 
 class ApproverDetailView(LoginRequiredMixin, DetailView):
