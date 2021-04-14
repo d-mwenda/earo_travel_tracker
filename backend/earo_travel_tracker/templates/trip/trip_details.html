@@ -1,4 +1,34 @@
 {% extends 'base.html' %}
+
+{% block custom_styles %}
+<style>
+.text-justify-xs {
+  text-align: justify;
+}
+
+/* Small devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  .text-justify-sm {
+      text-align: right;
+  }
+}
+
+/* Medium devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  .text-justify-md {
+      text-align: right;
+  }
+}
+
+/* Large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  .text-justify-lg {
+      text-align: right;
+  }
+}
+</style>
+{% endblock custom_styles %}
+
 {% block content %}
 {% if messages %}
 <div class="col-12">
@@ -14,7 +44,7 @@
   {% endfor %}
 </div>
 {%endif %}
-<div class="col-sm-12 col-md-6 col-12">
+<div class="col-sm-12 col-lg-6 col-12">
     <div class="card">
       <div class="card-header">
         <h2 class="card-title">
@@ -25,31 +55,31 @@
       <div class="card-body">
         <dl class="row">
           {% if request.user != trip.traveler.user_account %}
-          <dt class="col-sm-6">Traveler</dt>
-          <dd class="col-sm-6 text-right">{{trip.traveler.user_account.first_name}} {{trip.traveler.user_account.last_name}}</dd>
+          <dt class="col-sm-4">Traveler</dt>
+          <dd class="col-sm-8">{{trip.traveler.user_account.first_name}} {{trip.traveler.user_account.last_name}}</dd>
           {% endif %}
-          <dt class="col-sm-6">Start date</dt>
-          <dd class="col-sm-6 text-right">{{trip.start_date}}</dd>
-          <dt class="col-sm-6">End date</dt>
-          <dd class="col-sm-6 text-right">{{trip.end_date}}</dd>
-          <dt class="col-sm-6">Type of travel</dt>
-          <dd class="col-sm-6 text-right">{{trip.type_of_travel}}</dd>
-          <dt class="col-sm-6">Category of Travel</dt>
-          <dd class="col-sm-6 text-right">{{trip.category_of_travel}}</dd>
-          <dt class="col-sm-6">Reason for Travel</dt>
-          <dd class="col-sm-6 text-right">{{trip.reason_for_travel}}</dd>
-          <dt class="col-sm-6">Trip Security Level</dt>
-          <dd class="col-sm-6 text-right">{{trip.security_level}}</dd>
-          <dt class="col-sm-6">Start date</dt>
-          <dd class="col-sm-6 text-right">{{trip.start_date}}</dd>
-          <dt class="col-sm-6">Is trip mission critical?</dt>
-          <dd class="col-sm-6 text-right">{% if trip.is_mission_critical %} Yes {% else %} No {% endif %}</dd>
-          <dt class="col-sm-6">Scope of work</dt>
-          <dd class="col-sm-6 text-right"><a href="{{MEDIA_URL}}{{trip.scope_of_work.url}}">Scope of Work</a></dd>
+          <dt class="col-sm-4">Start date</dt>
+          <dd class="col-sm-8">{{trip.start_date}}</dd>
+          <dt class="col-sm-4">End date</dt>
+          <dd class="col-sm-8">{{trip.end_date}}</dd>
+          <dt class="col-sm-4">Type of travel</dt>
+          <dd class="col-sm-8">{{trip.type_of_travel}}</dd>
+          <dt class="col-sm-4">Category of Travel</dt>
+          <dd class="col-sm-8">{{trip.category_of_travel}}</dd>
+          <dt class="col-sm-4">Reason for Travel</dt>
+          <dd class="col-sm-8">{{trip.reason_for_travel}}</dd>
+          <dt class="col-sm-4">Trip Security Level</dt>
+          <dd class="col-sm-8">{{trip.security_level}}</dd>
+          <dt class="col-sm-4">Start date</dt>
+          <dd class="col-sm-8">{{trip.start_date}}</dd>
+          <dt class="col-sm-4">Is trip mission critical?</dt>
+          <dd class="col-sm-8">{% if trip.is_mission_critical %} Yes {% else %} No {% endif %}</dd>
+          <dt class="col-sm-4">Scope of work</dt>
+          <dd class="col-sm-8"><a href="{{MEDIA_URL}}{{trip.scope_of_work.url}}">Scope of Work</a></dd>
           {% if poet_details %}
             {% for detail in poet_details %}
-            <dt class="col-sm-6">POET details</dt>
-            <dd class="col-sm-6 text-right">
+            <dt class="col-sm-4">POET details</dt>
+            <dd class="col-sm-8">
               {{detail.project}}&nbsp;-&nbsp;{{detail.task}}&nbsp;
               {% if request.user == trip.traveler.user_account %}
               <a href="{% url 'update_poet' trip_id=detail.trip.id poet_id=detail.id %}"><u>edit</u></a>
@@ -57,17 +87,19 @@
             </dd>
             {% endfor %}
           {% endif %}
+          {% if request.user == trip.traveler.user_account %}
+            {% if poet_details %}
+            <dt class="col-sm-4"></dt>
+            <dd class="col-sm-8 float-right">
+              <a href="{% url 'add_poet' trip_id=trip.id %}" class="text-right"><u>Add more POET Details</u></a>
+            </dd>
+            {% endif %}
+            <dt class="col-sm-4"></dt>
+          <dd class="col-sm-8 float-right">
+            <a href="{% url 'u_update_trip' trip_id=trip.id %}" class="btn btn-outline-primary right">Change Trip Details</a>
+          </dd>
+          {% endif %}
         </dl>
-        {% if request.user == trip.traveler.user_account %}
-        {% if poet_details %}
-        <span class="float-right">
-          <a href="{% url 'add_poet' trip_id=trip.id %}" class="col-sm-8 col-sm-offset-4 text-right"><u>Add more POET Details</u></a>
-        </span><br><br>
-        {% endif %}
-        <span class="float-right">
-          <a href="{% url 'u_update_trip' trip_id=trip.id %}" class="btn btn-outline-primary right">Change Trip Details</a>
-        </span>
-        {% endif %}
       </div>
       <!-- /.card-body -->
       <div class="card-footer">
