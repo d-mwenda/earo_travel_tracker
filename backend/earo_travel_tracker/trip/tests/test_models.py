@@ -14,6 +14,8 @@ from django.contrib.auth import get_user_model
 
 user_model = get_user_model()
 
+# TODO test signals fire
+
 class TestTrip(TestCase):
     """
     In this class, the tests defined are the Trip, TripApproval and

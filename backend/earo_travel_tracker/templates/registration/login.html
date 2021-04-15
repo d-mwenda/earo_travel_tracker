@@ -17,9 +17,6 @@
             {{ hidden }}
             {% endfor %}
             <div class="input-group mb-3">
-                {% for error in form.username.errors %}
-                {{ error }}
-                {% endfor %}
                 {% render_field form.username class="form-control" placeholder="Username"%}
               <div class="input-group-append">
                 <div class="input-group-text">
@@ -28,9 +25,6 @@
               </div>
             </div>
             <div class="input-group mb-3">
-                {% for error in form.password.errors %}
-                {{ error }}
-                {% endfor %}
                 {% render_field form.password class="form-control" placeholder="Password" %}
               <div class="input-group-append">
                 <div class="input-group-text">
@@ -38,6 +32,16 @@
                 </div>
               </div>
             </div>
+            {% if form.errors %}
+              <div class="input-group mb-3">
+                <span>
+                  <p class="text-danger">
+                      Your username and password didn't match. 
+                      Please try again.
+                  </p>
+                </span>
+              </div>
+            {% endif %}
             <div class="row">
               <div class="col-4 offset-8">
                 <button type="submit" class="btn btn-theme-primary btn-block">Sign In</button>

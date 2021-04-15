@@ -57,10 +57,10 @@ INSTALLED_APPS = [
 # Authentication backends
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
-    'django_auth_adfs.backend.AdfsAuthCodeBackend',
-    "django_auth_adfs.backend.AdfsAccessTokenBackend",
-    "django_python3_ldap.auth.LDAPBackend",
     "guardian.backends.ObjectPermissionBackend",
+    # "django_python3_ldap.auth.LDAPBackend",
+    # "django_auth_adfs.backend.AdfsAuthCodeBackend",
+    # "django_auth_adfs.backend.AdfsAccessTokenBackend",
 )
 
 MIDDLEWARE = [
