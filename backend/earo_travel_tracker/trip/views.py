@@ -532,6 +532,7 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
         """
         approval = form.save(commit=False)
         approval.approval_date = timezone.now().date()
+        approval.acted_upon = True
         approval.save()
 
         # requester will get at least one of 4 possible email messages
@@ -689,7 +690,7 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
                                 )
                 self.page_title = "Ongoing Trips"
             elif filter_by== 'awaiting_approval':
-                queryset = queryset.filter(trip_is_approved=False).filter(approver__approver=user)
+                queryset = queryset.filter(trip_is_approved=False).filter(acted_upon=False).filter(approver__approver=user)
                 self.page_title = "Trips Awaiting Approval"
         self.queryset = queryset
         return super().get(request, *args, **kwargs)

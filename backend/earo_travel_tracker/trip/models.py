@@ -120,7 +120,7 @@ class Trip(models.Model):
             return "Approved"
 
         # Check which stage the unapproved trip is in the approval process
-        queryset = TripApproval.objects.filter(trip__id=self.id).filter(is_valid=True)
+        queryset = TripApproval.objects.filter(trip__id=self.id).filter(acted_upon=False)
         if queryset:
             # get the last approval and check for which security level it belongs.
             queryset = queryset.order_by("-approval_request_date")[0]
@@ -196,6 +196,8 @@ class TripApproval(models.Model):
     approval_request_date = models.DateTimeField(null=False, blank=True, auto_now_add=True)
     is_valid = models.BooleanField(null=False, blank=True, default=True,
                                 verbose_name="Approval validity")
+    acted_upon = models.BooleanField(null=False, blank=True, default=False,
+                                verbose_name="Approver has acted upon")
     approver = models.ForeignKey(Approver, blank=False, null=True,
                                 on_delete=models.PROTECT, verbose_name="Approved by")
     security_level = models.CharField(max_length=1,null=False, choices=LEVELS_OF_SECURITY,
