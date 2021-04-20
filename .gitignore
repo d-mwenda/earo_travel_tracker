@@ -58,7 +58,7 @@ testem.log
 
 # Application files
 *secret_settings.py
-*/settings.py
+*settings.py
 /media
 **/media
 */uploads
