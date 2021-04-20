@@ -34,6 +34,13 @@ class Approver(models.Model):
         """
         return reverse('view_approver', kwargs={'approver_id': self.id})
 
+    def delegate_approval(self, delegate):
+        """
+        Enables an approver to delegate their approval rights to another approver for a given
+        period of time.
+        """
+        pass
+
     class Meta:
         verbose_name = "Approver"
         verbose_name_plural = "Approvers"

@@ -35,6 +35,8 @@
                 <dd class="col-6">{% if trip_approval.trip.is_mission_critical %} Yes {% else %} No {% endif %}</dd>
                 <dt class="col-6 text-right">Trip Security Level</dt>
                 <dd class="col-6">{{trip_approval.trip.security_level}}</dd>
+                <dt class="col-6 text-right">Scope of work</dt>
+                <dd class="col-6"><a href="{{MEDIA_URL}}{{trip_approval.trip.scope_of_work.url}}">Scope of Work</a></dd>
             </dl>
             <form class="" method="POST">
                 <div class="card-body"> 
