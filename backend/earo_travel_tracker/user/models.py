@@ -11,3 +11,13 @@ class User(AbstractUser):
     """
     def __str__(self):
         return " ".join([self.first_name, self.last_name])
+
+    def is_an_approver(self):
+        """
+        Check that user is an approver.
+        """
+        try:
+            self.approver
+            return True
+        except User.approver.RelatedObjectDoesNotExist:
+            return False

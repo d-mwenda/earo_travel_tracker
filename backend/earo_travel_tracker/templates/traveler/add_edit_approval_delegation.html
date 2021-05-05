@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+    {% for message in messages %}
+    <div class="alert text-center {% if message.tags == 'error' %}alert-danger{%else%}alert-{{message.tags}}{%endif%} alert-dismissible fade show">
+    <h6>
+    {{message}}
+    </h6>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+    </button>
+    </div>
+    {% endfor %}
+    
+    <div class="card">
+        <div class="card-header">
+            {% if active_delegation %}
+            <h5 class="card-subtitle">Your Active Delegation of Approval</h5>
+            {% else %}
+            <h5 class="card-subtitle">Delegate Your Approvals</h5>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% comment %}
+            Check if there is already an active delegation to show the delegation details.
+            {%endcomment %}
+            {% if active_delegation %}
+            <div class="row">
+                <dt class="col-md-6">Delegated Approver</dt>
+                <dd class="col-md-6">{{ active_delegation.delegate.user.first_name }}&nbsp;{{ active_delegation.delegate.user.last_name }}</dd>
+                <dt class="col-md-6">Start date</dt>
+                <dd class="col-md-6">{{ active_delegation.start_date }}</dd>
+                <dt class="col-md-6">End date</dt>
+                <dd class="col-md-6">{{ active_delegation.end_date }}</dd>
+                <dt class="col-md-6">Reason for delegation</dt>
+                <dd class="col-md-6">{{ active_delegation.reason_for_delegation }}</dd>
+            </div>
+            <span class="float-right">
+                <a href="{% url 'revoke_approval_delegation' delegation_id=active_delegation.id %}" class="btn btn-outline-danger right">Revoke delegation</a>
+            </span>
+            <!-- /.row  -->
+            {% comment %}
+            If there is no active delegation render form to allow delegation.
+            {% endcomment %}
+            {% else %}
+            <form class="" method="POST">
+                    <div class="row"> 
+                        {% include 'render_form.html' %}
+                        <div class="col-12">
+                            <a href="{% url 'u_list_my_trips' %}" class="btn btn-outline-danger float-left">Cancel</a>
+                            <button class="btn btn-outline-primary float-right" type="submit">Delegate Approval</button>
+                        </div>
+                        <!-- /.col-12 -->
+                    </div>
+                    <!-- /.row -->
+            </form>
+            {% endif %}
+        </div>
+        <!-- /.card-body -->
+    </div>
+</div>
+{% endblock content %}
+
+{% block custom_scripts %}
+{{ form.media }}
+
+<script>
+    $(document).ready(function() {
+    $('select').select2();
+});
+</script>
+{% endblock custom_scripts %}

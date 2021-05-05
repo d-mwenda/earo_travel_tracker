@@ -19,7 +19,7 @@
           <tbody>
             {% for approver in approvers %}
             <tr>
-              <td><a href="">{{approver.approver}}&nbsp;{{approver.first_name}}</a></td>
+              <td><a href="{% url 'view_approver' approver_id=approver.id %}">{{approver.user.first_name}}&nbsp;{{approver.user.last_name}}</a></td>
               <td>{{approver.security_level}}</td>
               {% if approver.is_active %}
               <td>Active</td>

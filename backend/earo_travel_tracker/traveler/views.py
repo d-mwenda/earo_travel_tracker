@@ -3,13 +3,17 @@ This file provides all view functionality for the traveler app.
 """
 from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
 from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
+from django.contrib import messages
 # Third party apps imports
 from rest_framework import viewsets
-from guardian.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from guardian.mixins import LoginRequiredMixin, PermissionRequiredMixin, PermissionListMixin
 # Earo_travel_tracker imports
-from .models import Approver, CountrySecurityLevel, Departments, TravelerProfile
+from .models import (
+    Approver, CountrySecurityLevel, Departments, TravelerProfile, ApprovalDelegation
+)
 from .serializers import TravelerProfileSerializer, DepartmentSerializer
-from .forms import TravelerBioForm
+from .forms import TravelerBioForm, ApprovalDelegationForm, ApprovalDelegationRevocationForm
 
 
 # Rest API Views
@@ -48,32 +52,36 @@ class ApproverCreateView(LoginRequiredMixin,CreateView):
         return reverse_lazy('list_approvers')
 
 
-class ApproverDetailView(LoginRequiredMixin, DetailView):
+class ApproverDetailView(LoginRequiredMixin, PermissionRequiredMixin, DetailView):
     """
     Show the details of a single country.
     """
+    permission_required = "traveler.view_approver"
     model = Approver
     template_name = "traveler/approver_detail.html"
     context_object_name = "approver"
     pk_url_kwarg = "approver_id"
 
 
-class ApproverListView(LoginRequiredMixin, ListView):
+class ApproverListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     """
     Show the details of a single country.
     """
+    permission_required = "traveler.view_approver"
+    return_403 = True
     model = Approver
     template_name = "traveler/list_approvers.html"
     context_object_name = "approvers"
 
 
-class ApproverUpdateView(LoginRequiredMixin, UpdateView):
+class ApproverUpdateView(LoginRequiredMixin, PermissionListMixin, UpdateView):
     """
     Update the details of a single country.
     """
-    permission_required = 'traveler.change_approver'
+    permission_required = "traveler.change_approver"
+    return_403 = True
     model = Approver
-    fields = ['approver', 'security_level', 'is_active']
+    fields = ['user', 'security_level', 'is_active']
     template_name = "traveler/add_edit_approver.html"
     pk_url_kwarg = "approver_id"
     context_object_name = "approver"
@@ -282,3 +290,73 @@ class TravelerDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DetailView
     extra_context = {
         'page_title': 'Traveler Profile'
     }
+
+class DelegateApprovalCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    """Create an instance of approval delegation"""
+    # TODO user cannot delegate to self
+    permission_required = "traveler.add_approvaldelegation"
+    permission_object = None
+    return_403 = True
+    form_class = ApprovalDelegationForm
+    template_name = "traveler/add_edit_approval_delegation.html"
+    active_delegation = None
+
+    def form_valid(self, form):
+        approval_delegation = form.save(commit=False)
+        user = self.request.user
+        approval_delegation.approver_id = user.approver.id
+        approval_delegation.save()
+        messages.success(self.request, "You have successfully delegated approval")
+        return HttpResponseRedirect(reverse_lazy("delegate_approval"))
+
+    def get_context_data(self, *args, **kwargs):
+        ctx = super().get_context_data(*args, **kwargs)
+        self.get_active_delegation()
+        if self.active_delegation is not None:
+            ctx['active_delegation'] = self.active_delegation
+        return ctx
+
+    def get_active_delegation(self):
+        """
+        Get existing approval delegation object if any.
+        """
+        user = self.request.user
+        approver = user.approver
+        if approver.active_delegation_exists():
+            self.active_delegation = approver.get_active_delegation()
+
+
+class DelegateApprovalUpdateView(UpdateView):
+    """Update details on a delegation instance"""
+    pass
+
+
+class RevokeApprovalDelegationView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    """View to revoke existing approval"""
+    permission_required = "traveler.change_approval_delegation"
+    return_403 = True
+    pk_url_kwarg = "delegation_id"
+    model = ApprovalDelegation
+    form_class = ApprovalDelegationRevocationForm
+    context_object_name = "approval_delegation"
+    template_name = "traveler/revoke_approval_delegation.html"
+
+    def form_valid(self, form):
+        revocation = form.save(commit=False)
+        revocation.active = False
+        revocation.save()
+        messages.success(self.request, "You have successfully revoked delegation of approval")
+        return HttpResponseRedirect(reverse_lazy("delegate_approval"))
+
+
+class DelegateApprovalListView(ListView):
+    """
+    See a list of all active delegations.
+    Non-admin users only see their own delegations
+    """
+    pass
+
+
+class DelegateApprovalDetailView(DetailView):
+    """See details of an approval delegation"""
+    pass

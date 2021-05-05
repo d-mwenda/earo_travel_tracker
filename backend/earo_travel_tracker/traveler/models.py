@@ -1,9 +1,13 @@
 """
 Data models for the traveler app are defined in this file.
 """
+import logging
+# django imports
 from django.db import models
 from django.conf import settings
 from django.urls import reverse
+from django.contrib.auth.models import Group
+from django.utils import timezone
 
 LEVELS_OF_SECURITY = (
     ('1','Level 1'),
@@ -12,6 +16,8 @@ LEVELS_OF_SECURITY = (
 )
 
 
+logger = logging.getLogger(__name__)
+
 class Approver(models.Model):
     """
     All users who are designated as approvers have to be stored in the DB table associated with
@@ -19,14 +25,14 @@ class Approver(models.Model):
     All approvers set on other models (Departments, CountrySecurityLevel, TravelerProfile) should
     be referenced to this model.
     """
-    approver = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False,
-                            blank=False)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=False,
+                            blank=False, related_name="approver")
     security_level = models.CharField(max_length=1, choices=LEVELS_OF_SECURITY, null=False,
                             blank=False, default=1, verbose_name="Security Approval Level")
     is_active = models.BooleanField(null=False, blank=True, default=True)
 
     def __str__(self):
-        return " ".join([self.approver.first_name, self.approver.last_name])
+        return " ".join([self.user.first_name, self.user.last_name])
 
     def get_absolute_url(self):
         """
@@ -34,16 +40,67 @@ class Approver(models.Model):
         """
         return reverse('view_approver', kwargs={'approver_id': self.id})
 
-    def delegate_approval(self, delegate):
+    def active_delegation_exists(self):
         """
-        Enables an approver to delegate their approval rights to another approver for a given
-        period of time.
+        Check if there is an existing active delegation.
         """
-        pass
+        return ApprovalDelegation.objects.filter(approver=self).filter(active=True).exists()
+
+    def get_delegate(self):
+        """Get the approver to whom approval has been delegated"""
+        return self.get_active_delegation().approver
+
+    def get_active_delegation(self):
+        """Get the active delegation"""
+        return ApprovalDelegation.objects.filter(approver=self, active=True)[0]
+
+    def add_to_approvers_group(self):
+        """
+        Add approver to approvers group when an approver is created.
+        """
+        if self._state.adding:
+            try:
+                approvers = Group.objects.get(name='approvers')
+                approvers.user_set.add(self.user)
+            except Group.DoesNotExist:
+                logger.error("Approvers group doesn't exist. "
+                    "Create the group and assign it the proper permissions.")
+
+    def save(self, *args, **kwargs):
+        self.add_to_approvers_group()
+        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Approver"
         verbose_name_plural = "Approvers"
+
+
+class ApprovalDelegation(models.Model):
+    """
+    This class implements delegation of approval rights.
+    """
+    approver = models.ForeignKey(Approver, on_delete=models.PROTECT,
+            related_name="delegating_approver", null=False, blank=False, db_index=True)
+    delegate = models.ForeignKey(Approver, on_delete=models.PROTECT,
+            related_name="delegate", null=False, blank=False, db_index=True)
+    reason_for_delegation = models.TextField(max_length=500, blank=False, null=False)
+    reason_for_revocation = models.TextField(max_length=500, blank=False, null=False)
+    start_date = models.DateField(null=False, blank=False, default=timezone.now)
+    end_date = models.DateField(null=False, blank=False)
+    active = models.BooleanField(default=True, null=False)
+
+    def get_absolute_url(self):
+        """Permalink to an objects details"""
+        return reverse('u_trip_details', kwargs={'approval_delegation_id':self.id})
+
+    def revoke_approval_delegation(self, reason_for_revocation):
+        """
+        Enables an approver to revoke an existing delegation of their approval rights.
+        """
+        self.active = False
+        self.reason_for_revocation = reason_for_revocation
+        self.end_date = timezone.now().today()
+        self.save()
 
 
 class Departments(models.Model):
@@ -110,18 +167,11 @@ class TravelerProfile(models.Model):
         ('Partners', 'Partners'),
     )
 
-    # first_name = models.CharField(max_length=20, null=False, blank=False, db_index=True)
-    # last_name = models.CharField(max_length=20, null=False, blank=False)
-    # date_of_birth = models.DateField(null=False, blank=False)
     department = models.ForeignKey(Departments, on_delete=models.PROTECT, null=True,
                                     blank=True)
     type_of_traveler = models.CharField(max_length=20, null=False, blank=False,
                                         choices=TRAVEL_CATEGORIES)
     nationality = models.CharField(max_length=30, null=False, blank=False)
-    # is_dependant_of = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True,
-    #                                     null=True, db_index=True, related_name="Guardian")
-    # Allow the country_of_duty to be null when being created programmatically
-    # but enforce a user to specify it when editing the profile via a form.
     country_of_duty = models.ForeignKey(CountrySecurityLevel , null=True, blank=False,
                             on_delete=models.PROTECT, verbose_name="Country of duty / residence")
     contact_telephone = models.CharField(max_length=20, null=False, blank=False)
@@ -156,28 +206,33 @@ class TravelerProfile(models.Model):
         return None if no approver is set.
         """
         # security level 1 approver
-        print("passed arg type:", type(security_level))
+        print("passed arg type:", type(security_level)) # debugging code
         security_level = int(security_level)
         if security_level == 1:
             if self.approver is not None:
                 print(self.approver) # Debug code
-                return self.approver
+                approver = self.approver
             elif (self.department is not None and
                 self.department.security_level_1_approver is not None):
                 print("trying to get department approver") # debug code
                 print(self.department.security_level_1_approver) # debug code
-                return self.department.security_level_1_approver
+                approver = self.department.security_level_1_approver
 
         # security level 2 approver
         elif security_level == 2:
-            return self.department.security_level_2_approver
+            approver = self.department.security_level_2_approver
 
         # security level 3 approver
         elif security_level == 3:
-            return self.country_of_duty.security_level_3_approver
+            approver = self.country_of_duty.security_level_3_approver
         else:
             print("no approver")  # debug code
             return None
+
+        # check if approval has been delegated.
+        if approver.active_delegation_exists():
+            return approver.get_delegate()
+        return approver
 
     class Meta:
         verbose_name = "Traveler Profile"

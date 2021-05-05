@@ -18,5 +18,5 @@ class TripUtilsMixin:
         if set_approver is None:
             print("no approver") # debug code
             return False
-        print("set approver ", set_approver.approver) # debug code
-        return bool(user == set_approver.approver)
+        print("set approver ", set_approver.user) # debug code
+        return bool(user == set_approver.user)

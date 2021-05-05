@@ -17,3 +17,11 @@
     </div>
 </div>
 {% endblock content %}
+
+{% block custom_scripts %}
+<script>
+    $(document).ready(function() {
+    $('select').select2();
+});
+</script>
+{% endblock custom_scripts %}

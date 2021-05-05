@@ -210,7 +210,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         subject_line = f"Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"
         approver_context = {
             'trip': trip,
-            'recipient': approver.approver.first_name,
+            'recipient': approver.user.first_name,
             'host': self.request.get_host(),
             'scheme': self.request.scheme,
             'approval_request': approval_request,
@@ -233,7 +233,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
             approver_plain_message,
             approver_html_message,
             settings.EMAIL_HOST_USER,
-            [approver.approver.email,],
+            [approver.user.email,],
         )
         requester_mail = (
             subject_line,
@@ -564,6 +564,7 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
 
             # make next approval request
             next_security_level = approval.trip.get_next_security_level()
+            print(next_security_level)
             if next_security_level is None: # TODO probably make this a method
                 # mark trip as completely approved
                 approval.trip.approval_complete = True
@@ -573,7 +574,6 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
             else:
                 approver = approval.trip.traveler.get_approver(security_level=next_security_level)
                 # if approver == approval.approver: TODO user cannot be own approver. send error email
-                #     approver = obj.trip.traveler.get_approver(security_level=next_security_level)
                 if approver is not None:
                     # request approval
                     approval_request = approval.trip.request_approval(next_security_level, approver)
@@ -606,7 +606,7 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
                         plain_message,
                         html_message,
                         settings.EMAIL_HOST_USER,
-                        [approver.approver.email,],
+                        [approver.user.email,],
                         )
                     email_messages.append(approver_request_mail)
 
@@ -674,8 +674,8 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
         filter_by = kwargs['filter_by']
         user = request.user
         # queryset = self.model.objects.filter(
-        #     Q(trip__traveler__approver__approver=user) |
-        #     Q(trip__traveler__department__trip_approver__approver=user)
+        #     Q(trip__traveler__approver__user=user) |
+        #     Q(trip__traveler__department__trip_approver__user=user)
         #     )
         queryset = self.model.objects.all()
         if filter_by:
@@ -690,7 +690,7 @@ class TripApprovalListView(LoginRequiredMixin, ListView):
                                 )
                 self.page_title = "Ongoing Trips"
             elif filter_by== 'awaiting_approval':
-                queryset = queryset.filter(trip_is_approved=False).filter(acted_upon=False).filter(approver__approver=user)
+                queryset = queryset.filter(trip_is_approved=False).filter(acted_upon=False).filter(approver__user=user)
                 self.page_title = "Trips Awaiting Approval"
         self.queryset = queryset
         return super().get(request, *args, **kwargs)

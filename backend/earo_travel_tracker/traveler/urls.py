@@ -11,7 +11,7 @@ from .views import (
     TravelerListView, TravelerDetailView, TravelerUpdateView, CountrySecurityLevelCreateView,
     CountrySecurityLevelDeleteView, CountrySecurityLevelDetailView, CountrySecurityLevelUpdateView,
     CountrySecurityLevelListView, ApproverCreateView, ApproverDetailView, ApproverUpdateView,
-    ApproverDeleteView, ApproverListView
+    ApproverDeleteView, ApproverListView, DelegateApprovalCreateView, RevokeApprovalDelegationView,
 )
 
 
@@ -40,7 +40,7 @@ urlpatterns = [
     path('new-approver', ApproverCreateView.as_view(), name='create_approver'),
     path('update-approver/approver=<approver_id>', ApproverUpdateView.as_view(),
         name='update_approver'),
-    path('approver-details/approver=<approver_id>', ApproverDetailView.as_view(), 
+    path('approver-details/approver=<approver_id>', ApproverDetailView.as_view(),
         name='view_approver'),
     path('list-approvers', ApproverListView.as_view(), name='list_approvers'),
     path('delete-approver/approver=<approver_id>', ApproverDeleteView.as_view(),
@@ -54,4 +54,8 @@ urlpatterns = [
     path('list-country', CountrySecurityLevelListView.as_view(), name='list_countries'),
     path('delete-country/country=<country_id>', CountrySecurityLevelDeleteView.as_view(),
         name='delete_country'),
+    # ApprovalDelegation views urls
+    path('delegate-approval', DelegateApprovalCreateView.as_view(), name='delegate_approval'),
+    path('revoke-delegation/delegation=<delegation_id>', RevokeApprovalDelegationView.as_view(),
+        name='revoke_approval_delegation'),
 ]

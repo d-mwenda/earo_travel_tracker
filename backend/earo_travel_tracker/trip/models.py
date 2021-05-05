@@ -135,9 +135,8 @@ class Trip(models.Model):
         """
         Check which is the next approval level and return it.
         """
-        # TODO add filter to check last approval is True and valid
-        approvals = TripApproval.objects.filter(trip__id=self.id).order_by("-approval_request_date")
-        # approvals.filter(is_valid=True).filter(trip_is_approved=True)
+        # TODO probably trip needs to be approved as well
+        approvals = TripApproval.objects.filter(trip__id=self.id, is_valid=True).order_by("-approval_request_date")
         if approvals:
             last_approval = approvals[0]
             if last_approval.security_level == self.security_level:
