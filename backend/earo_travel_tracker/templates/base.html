@@ -49,8 +49,8 @@
               <i class="nav-icon fa fa-user" aria-hidden="true"></i>
               <p>My Profile</p>
             </a>
-            </li>
-            <!-- Trips -->
+          </li>
+          <!-- Trips -->
           <li class="nav-item">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa fa-plane"></i>
@@ -72,6 +72,8 @@
                   <p>New Trip</p>
                 </a>
               </li>
+              {% comment %}Allow only approvers to view these links{% endcomment %}
+              {% if perms.traveler.add_approvaldelegation %}
               <li class="nav-item">
                 <a href="{% url 'u_list_awaiting_approval_trips' %}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
@@ -90,117 +92,133 @@
                   <p>Upcoming Trips</p>
                 </a>
               </li>
+              {% endif %}
             </ul>
           </li>
           <!-- /Trips -->
-          <!-- Manage Travelers -->
+          <!-- Travelers -->
+          {% if perms.traveler.add_travelerprofile or perms.traveler.view_travelerprofile %}
           <li class="nav-item">
             <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-tachometer-alt"></i>
-              <p>
-                Manage Travelers
-                <i class="right fas fa-angle-left"></i>
-              </p>
+              <i class="fa fa-users"></i>
+              <p>Travelers</p>
+              <i class="right fas fa-angle-left"></i>
             </a>
             <ul class="nav nav-treeview">
+              {% if perms.traveler.add_travelerprofile %}
               <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="fa fa-users"></i>
-                  <p>Travelers</p>
-                  <i class="right fas fa-angle-left"></i>
+                <a href="{% url 'u_create_traveler' %}" class="nav-link">
+                  <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
+                  <p>Add Traveler</p>
                 </a>
-                <ul class="nav nav-treeview">
-                  {% if perms.traveler.add_travelerprofile %}
-                  <li class="nav-item">
-                    <a href="{% url 'u_create_traveler' %}" class="nav-link">
-                      <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
-                      <p>Add Traveler</p>
-                    </a>
-                  </li>
-                  {% endif %}
-                  {% if perms.traveler.view_travelerprofile %}
-                  <li class="nav-item">
-                    <a href="{% url 'u_list_travelers' %}" class="nav-link">
-                      <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
-                      <p>Travelers Register</p>
-                    </a>
-                  </li>
-                  {% endif %}
-                </ul>
               </li>
-              
+              {% endif %}
+              {% if perms.traveler.view_travelerprofile %}
               <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <i class="fa fa-sitemap" aria-hidden="true"></i>
-                  <p>Administration</p>
-                  <i class="right fas fa-angle-left"></i>
+                <a href="{% url 'u_list_travelers' %}" class="nav-link">
+                  <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
+                  <p>Travelers Register</p>
                 </a>
-                <ul class="nav nav-treeview">
-                  {% if perms.traveler.add_department %}
-                  <li class="nav-item">
-                    <a href="{% url 'u_create_department' %}" class="nav-link">
-                      <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
-                      <p>Add Deparment</p>
-                    </a>
-                  </li>
-                  {% endif %}
-                  {% if perms.traveler.view_department %}
-                  <li class="nav-item">
-                    <a href="{% url 'u_list_departments' %}" class="nav-link">
-                      <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
-                      <p>Department Register</p>
-                    </a>
-                  </li>
-                  {% endif %}
-                </ul>
-                <ul class="nav nav-treeview">
-                  {% if perms.traveler.add_countrysecuritylevel %}
-                  <li class="nav-item">
-                    <a href="{% url 'create_country' %}" class="nav-link">
-                      <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
-                      <p>Add Country</p>
-                    </a>
-                  </li>
-                  {% endif %}
-                  {% if perms.traveler.view_countrysecuritylevel %}
-                  <li class="nav-item">
-                    <a href="{% url 'list_countries' %}" class="nav-link">
-                      <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
-                      <p>Countries</p>
-                    </a>
-                  </li>
-                  {% endif %}
-                </ul>
-                <ul class="nav nav-treeview">
-                  {% if perms.traveler.add_approver %}
-                  <li class="nav-item">
-                    <a href="{% url 'create_approver' %}" class="nav-link">
-                      <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
-                      <p>Add Approver</p>
-                    </a>
-                  </li>
-                  {% endif %}
-                  {% if perms.traveler.view_approver %}
-                  <li class="nav-item">
-                    <a href="{% url 'list_approvers' %}" class="nav-link">
-                      <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
-                      <p>Approvers</p>
-                    </a>
-                  </li>
-                  {% endif %}
-                  {% if perms.traveler.add_approvaldelegation %}
-                  <li class="nav-item">
-                    <a href="{% url 'delegate_approval' %}" class="nav-link">
-                      <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
-                      <p>Approval Delegation</p>
-                    </a>
-                  </li>
-                  {% endif %}
-                </ul>
               </li>
+              {% endif %}
             </ul>
           </li>
-          <!-- /Manage Travelers -->
+          <!-- /Travelers -->
+          {% endif %}
+          {% if perms.travelers.add_department or perms.travelers.view_department %}
+          <!-- Departments -->
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="fa fa-sitemap" aria-hidden="true"></i>
+              <p>Departments</p>
+              <i class="right fas fa-angle-left"></i>
+            </a>
+            <ul class="nav nav-treeview">
+              {% if perms.traveler.add_department %}
+              <li class="nav-item">
+                <a href="{% url 'u_create_department' %}" class="nav-link">
+                  <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
+                  <p>Add Deparment</p>
+                </a>
+              </li>
+              {% endif %}
+              {% if perms.traveler.view_department %}
+              <li class="nav-item">
+                <a href="{% url 'u_list_departments' %}" class="nav-link">
+                  <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
+                  <p>Department Register</p>
+                </a>
+              </li>
+              {% endif %}
+            </ul>
+          </li>
+          <!-- /Departments -->
+          {% endif %}
+          {% if perms.travelers.add_countrysecuritylevel or perms.travelers.add_countrysecuritylevel%}
+          <!-- Country Security Levels -->
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="fa fa-globe-africa" aria-hidden="true"></i>
+              <p>Country Security Levels</p>
+              <i class="right fas fa-angle-left"></i>
+            </a>
+            <ul class="nav nav-treeview">
+              {% if perms.traveler.add_countrysecuritylevel %}
+              <li class="nav-item">
+                <a href="{% url 'create_country' %}" class="nav-link">
+                  <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
+                  <p>Add Country</p>
+                </a>
+              </li>
+              {% endif %}
+              {% if perms.traveler.view_countrysecuritylevel %}
+              <li class="nav-item">
+                <a href="{% url 'list_countries' %}" class="nav-link">
+                  <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
+                  <p>Countries</p>
+                </a>
+              </li>
+              {% endif %}
+            </ul>
+          </li>
+          <!-- /Country Security Levels -->
+          {% endif %}
+          {% if perms.travelers.add_approver or perms.travelers.view_approver or perms.traveler.add_approvaldelegation %}
+          <!-- Approvers -->
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="fas fa-user-secret" aria-hidden="true"></i>
+              <p>Approvers</p>
+              <i class="right fas fa-angle-left"></i>
+            </a>
+            <ul class="nav nav-treeview">
+              {% if perms.traveler.add_approver %}
+              <li class="nav-item">
+                <a href="{% url 'create_approver' %}" class="nav-link">
+                  <i class="fa fa-plus" aria-hidden="true"></i>&nbsp;
+                  <p>Add Approver</p>
+                </a>
+              </li>
+              {% endif %}
+              {% if perms.traveler.view_approver %}
+              <li class="nav-item">
+                <a href="{% url 'list_approvers' %}" class="nav-link">
+                  <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
+                  <p>Approvers</p>
+                </a>
+              </li>
+              {% endif %}
+              {% if perms.traveler.add_approvaldelegation %}
+              <li class="nav-item">
+                <a href="{% url 'delegate_approval' %}" class="nav-link">
+                  <i class="fa fa-list-alt" aria-hidden="true"></i>&nbsp;
+                  <p>Approval Delegation</p>
+                </a>
+              </li>
+              {% endif %}
+            </ul>
+          </li>
+            {% endif %}
         </ul>
       </nav>
       <!-- /.sidebar-menu -->
