@@ -250,6 +250,20 @@
     <div class="content">
       <div class="container-fluid">
         <div class="row  justify-content-center">
+          {% if messages %}
+          <div class="col-12">
+            {% for message in messages %}
+            <div class="alert text-center {% if message.tags == 'error' %}alert-danger{%else%}alert-{{message.tags}}{%endif%} alert-dismissible fade show">
+              <h6>
+                {{message}}
+              </h6>
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            {% endfor %}
+          </div>
+          {%endif %}
           {% block content %}
           {% endblock content %}
         </div>

@@ -1,15 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-{% if messages %}
-<div class="col-12">
-  {% for message in messages %}
-  <p class="alert text-center {% if message.tags == 'error' %}alert-danger{%else%}alert-{{message.tags}}{%endif%}">
-    {{message}}
-  </p>
-  {% endfor %}
-</div>
-{%endif %}
 <div class="col-12">
     <div class="card">
       <div class="card-header text-center">
