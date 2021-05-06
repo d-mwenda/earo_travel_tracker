@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block custom_styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
+{% endblock custom_styles %}
+
 {% block content %}
 <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
     <div class="card card-primary">
@@ -21,7 +25,9 @@
 {% block custom_scripts %}
 <script>
     $(document).ready(function() {
-    $('select').select2();
+    $('select').select2({
+        theme: 'bootstrap4',
+    });
 });
 </script>
 {% endblock custom_scripts %}

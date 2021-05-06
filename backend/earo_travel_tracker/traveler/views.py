@@ -42,7 +42,7 @@ class ApproverCreateView(LoginRequiredMixin,CreateView):
     """
     permission_required = 'traveler.add_approver'
     model = Approver
-    fields = ['approver', 'security_level']
+    fields = ['user', 'security_level']
     template_name = 'traveler/add_edit_approver.html'
     extra_context = {
         'page_title': 'Add Approver'
