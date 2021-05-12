@@ -11,7 +11,7 @@ from django.utils import timezone
 
 LEVELS_OF_SECURITY = (
     ('1','Level 1'),
-    ('1','Level 2'),
+    ('2','Level 2'),
     ('3','Level 3'),
 )
 
@@ -205,6 +205,7 @@ class TravelerProfile(models.Model):
         Get the approver for a traveler profile, given the security level
         return None if no approver is set.
         """
+        approver = None
         # security level 1 approver
         print("passed arg type:", type(security_level)) # debugging code
         security_level = int(security_level)
@@ -225,12 +226,13 @@ class TravelerProfile(models.Model):
         # security level 3 approver
         elif security_level == 3:
             approver = self.country_of_duty.security_level_3_approver
+            print(f"sec level 3 {approver}")
         else:
-            print("no approver")  # debug code
+            print("Invalid Security Level")  # debug code
             return None
 
         # check if approval has been delegated.
-        if approver.active_delegation_exists():
+        if approver is not None and approver.active_delegation_exists():
             return approver.get_delegate()
         return approver
 

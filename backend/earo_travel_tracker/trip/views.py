@@ -564,8 +564,9 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
 
             # make next approval request
             next_security_level = approval.trip.get_next_security_level()
-            print(next_security_level)
-            if next_security_level is None: # TODO probably make this a method
+            print(f"Next security level is: {next_security_level}")
+            if next_security_level is None:
+                # TODO probably make this a method
                 # mark trip as completely approved
                 approval.trip.approval_complete = True
                 approval.trip.save()
@@ -575,40 +576,56 @@ class ApproveTripView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, U
                 approver = approval.trip.traveler.get_approver(security_level=next_security_level)
                 # if approver == approval.approver: TODO user cannot be own approver. send error email
                 if approver is not None:
+                    if approver == approval.approver:
+                        auto_approve_next_level = TripApproval(
+                            trip=approval.trip,
+                            acted_upon=True,
+                            approver=approver,
+                            security_level=next_security_level,
+                            trip_is_approved=True,
+                            approval_date=timezone.now().date(),
+                            approval_comment="Automatically approved by the system since the approver "
+                                "who approved the immediate lower security level is the same one set "
+                                "for this security level."
+                            )
+                        auto_approve_next_level.save()
+                    # TODO send an email
+                    # TODO make this a method or function
                     # request approval
-                    approval_request = approval.trip.request_approval(next_security_level, approver)
-                    approval_request.save()
+                    else:
+                        approval_request = approval.trip.request_approval(next_security_level, approver)
+                        approval_request.save()
 
-                    # draft email to requester
-                    trip = approval_request.trip
-                    subject = f"Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"
-                    context["trip"] = trip
-                    html_message = render_to_string('emails/approval_request_requester.html', context)
-                    plain_message = strip_tags(html_message)
-                    approval_request_mail = (
-                        subject,
-                        plain_message,
-                        html_message,
-                        settings.EMAIL_HOST_USER,
-                        [requester_email,],
-                        )
-                    email_messages.append(approval_request_mail)
-                    # draft email to next approver
-                    context['recipient'] = approver.approver.first_name
-                    context['host'] = self.request.get_host()
-                    context['scheme'] = self.request.scheme
-                    context['approval_request'] = approval_request
-                    subject = f"Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"
-                    html_message = render_to_string('emails/approval_request_approver.html', context)
-                    plain_message = strip_tags(html_message)
-                    approver_request_mail = (
-                        subject,
-                        plain_message,
-                        html_message,
-                        settings.EMAIL_HOST_USER,
-                        [approver.user.email,],
-                        )
-                    email_messages.append(approver_request_mail)
+                        # draft email to requester
+                        trip = approval_request.trip
+                        subject = f"Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"
+                        context["trip"] = trip
+                        html_message = render_to_string('emails/approval_request_requester.html', context)
+                        plain_message = strip_tags(html_message)
+                        approval_request_mail = (
+                            subject,
+                            plain_message,
+                            html_message,
+                            settings.EMAIL_HOST_USER,
+                            [requester_email,],
+                            )
+                        email_messages.append(approval_request_mail)
+                        # draft email to next approver
+                        context['recipient'] = approver.user.first_name
+                        context['host'] = self.request.get_host()
+                        context['scheme'] = self.request.scheme
+                        context['approval_request'] = approval_request
+                        subject = f"Trip Approval Requested: {trip.trip_name} beginning on {trip.start_date}"
+                        html_message = render_to_string('emails/approval_request_approver.html', context)
+                        plain_message = strip_tags(html_message)
+                        approver_request_mail = (
+                            subject,
+                            plain_message,
+                            html_message,
+                            settings.EMAIL_HOST_USER,
+                            [approver.user.email,],
+                            )
+                        email_messages.append(approver_request_mail)
 
                 else:
                     # handle no approver
