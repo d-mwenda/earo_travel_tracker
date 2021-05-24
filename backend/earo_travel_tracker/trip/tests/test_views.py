@@ -6,6 +6,7 @@ from django.test import Client
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.urls import resolve
 
 from guardian.shortcuts import assign_perm
 
@@ -76,6 +77,14 @@ class TestTripCRUDView(BaseViewTestCase):
     The implemented tests are:
     1. Test that user needs permission
     """
+
+    def test_url_conf(self):
+        """
+        Test that the URLs are resolve as expected.
+        """
+        resolved_to = resolve("/trip/new-trip")
+        self.assertEqual(resolved_to.func.__name__, "TripCreateView")
+        self.assertEqual(resolved_to.view_name, "u_create_trip")
 
     def test_get_create(self):
         """
