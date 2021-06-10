@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block custom_styles %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
+{% endblock custom_styles %}
 {% block content %}
 <div class="col-12">
     <div class="card">
@@ -8,7 +12,7 @@
       </div>
       <!-- /.card-header -->
       <div class="card-body table-responsive p-0">
-        <table class="table table-hover text-nowrap">
+        <table class="table table-hover" id="users-table">
           <thead>
             <tr>
               <th>Name</th>
@@ -46,4 +50,13 @@
     <!-- /.card -->
   </div>
   {% endblock content %}
+
+  {% block custom_scripts %}
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+  <script>
+    $(document).ready( function () {
+      $('#users-table').DataTable();
+    });
+  </script>
+  {% endblock custom_scripts %}
   

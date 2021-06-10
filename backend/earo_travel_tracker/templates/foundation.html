@@ -2,46 +2,46 @@
 {% load widget_tweaks %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kenya-Somalia Travel Tracker</title>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kenya-Somalia Travel Tracker</title>
 
-  <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
-  <!-- Bootstrap 4 style -->
-  <link rel="stylesheet" href="{% static 'plugins/bootstrap/css/adminlte.min.css' %}">
-  <!-- App universal -->
-  <link rel="stylesheet" href="{% static 'dist/main.css' %}">
-  <!-- select2 styles to add features to select fields -->
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+    <!-- Bootstrap 4 style -->
+    <link rel="stylesheet" href="{% static 'plugins/bootstrap/css/adminlte.min.css' %}">
+    <!-- App universal -->
+    <link rel="stylesheet" href="{% static 'dist/main.css' %}">
+    <!-- select2 styles to add features to select fields -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-  <!-- Custom Styles -->
-  {% block custom_styles %}
+    <!-- Custom Styles -->
+    {% block custom_styles %}
 
-  {% endblock custom_styles %}
+    {% endblock custom_styles %}
 
-</head>
-{% comment %}
-Always make sure to include an opening body tag when you extend this template.
-{%endcomment %}
-{% block body %}
-{% endblock body %}
-<!-- REQUIRED SCRIPTS -->
+  </head>
+    {% comment %}
+    Always make sure to include an opening body tag when you extend this template.
+    {%endcomment %}
+    {% block body %}
+    {% endblock body %}
+    <!-- REQUIRED SCRIPTS -->
 
-<!-- jQuery -->
-<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
-<!-- Bootstrap 4 -->
-<script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <!-- jQuery -->
+    <script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+    <!-- Bootstrap 4 -->
+    <script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 
-<script src="{% static 'plugins/bootstrap/js/adminlte.min.js' %}"></script>
+    <script src="{% static 'plugins/bootstrap/js/adminlte.min.js' %}"></script>
 
-<!-- Select2 JS to add dynamic features to select fields -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-{% block custom_scripts %}
+    <!-- Select2 JS to add dynamic features to select fields -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    {% block custom_scripts %}
 
-{% endblock custom_scripts %}
-</body>
+    {% endblock custom_scripts %}
+  </body>
 </html>
