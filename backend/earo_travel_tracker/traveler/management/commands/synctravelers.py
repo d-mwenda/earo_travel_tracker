@@ -4,7 +4,7 @@ this script defines a command to syncronize AD users with traveler user accounts
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 # earo-travel-tracker imports
-from traveler.models import TravelerDetails
+from traveler.models import TravelerProfile
 
 
 class Command(BaseCommand):
@@ -22,9 +22,9 @@ class Command(BaseCommand):
         user_model = get_user_model()
         for user in user_model.objects.all():
             try:
-                TravelerDetails.objects.get(user_account=user.id)
-            except TravelerDetails.DoesNotExist:
-                TravelerDetails(
+                TravelerProfile.objects.get(user_account=user.id)
+            except TravelerProfile.DoesNotExist:
+                TravelerProfile(
                     type_of_traveler='Employee',
                     nationality='Kenyan',
                     contact_telephone='',
