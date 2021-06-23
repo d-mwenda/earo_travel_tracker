@@ -16,7 +16,7 @@ from django.utils.html import strip_tags
 # third-party app imports
 from guardian.shortcuts import assign_perm, get_anonymous_user
 # earo_travel_tracker imports
-from traveler.models import TravelerProfile
+from traveler.models import TravelerProfile, ApprovalDelegation
 
 logger = logging.getLogger(__name__)
 
@@ -67,3 +67,14 @@ def alert_admin_initial_login(sender, **kwargs):
             fail_silently=True,
             html_message=html_message
         )
+
+@receiver(post_save, sender=ApprovalDelegation)
+def assign_trip_perms(sender, **kwargs):
+    """
+    Assign an approver the rights to their ApprovalDelegation instance.
+    """
+    if kwargs['created']:
+        approval_delegation = kwargs['instance']
+        user = approval_delegation.approver.user
+        assign_perm('change_approvaldelegation', user, approval_delegation)
+        logger.debug("Change permission for the %s instance assigned to the delegating approver", sender)

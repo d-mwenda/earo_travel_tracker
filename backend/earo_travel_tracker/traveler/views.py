@@ -5,6 +5,7 @@ from django.views.generic import CreateView, ListView, DetailView, UpdateView, D
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 # Third party apps imports
 from rest_framework import viewsets
 from guardian.mixins import LoginRequiredMixin, PermissionRequiredMixin, PermissionListMixin
@@ -15,7 +16,7 @@ from .models import (
 from .serializers import TravelerProfileSerializer, DepartmentSerializer
 from .forms import TravelerBioForm, ApprovalDelegationForm, ApprovalDelegationRevocationForm
 
-
+USER_MODEL = get_user_model()
 # Rest API Views
 class TravelerViewSet(viewsets.ModelViewSet):
     """
@@ -321,9 +322,12 @@ class DelegateApprovalCreateView(LoginRequiredMixin, PermissionRequiredMixin, Cr
         Get existing approval delegation object if any.
         """
         user = self.request.user
-        approver = user.approver
-        if approver.active_delegation_exists():
-            self.active_delegation = approver.get_active_delegation()
+        try:
+            approver = user.approver
+            if approver.active_delegation_exists():
+                self.active_delegation = approver.get_active_delegation()
+        except USER_MODEL.DoesNotExist:
+            pass
 
 
 class DelegateApprovalUpdateView(UpdateView):
@@ -333,7 +337,7 @@ class DelegateApprovalUpdateView(UpdateView):
 
 class RevokeApprovalDelegationView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     """View to revoke existing approval"""
-    permission_required = "traveler.change_approval_delegation"
+    permission_required = "traveler.change_approvaldelegation"
     return_403 = True
     pk_url_kwarg = "delegation_id"
     model = ApprovalDelegation
