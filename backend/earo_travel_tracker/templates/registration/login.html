@@ -42,11 +42,19 @@
                 </span>
               </div>
             {% endif %}
+            
             <div class="row">
-              <div class="col-4 offset-8">
+              <div class="col-4 offset-8 mb-3">
                 <button type="submit" class="btn btn-theme-primary btn-block">Sign In</button>
               </div>
               <!-- /.col -->
+            </div>
+            <!-- /.row -->
+            <p class="text-center">OR</p>
+            <div class="row">
+              <div class="col-12 mb-3">
+                <a href="{% url 'django_auth_adfs:login' %}" class="btn btn-theme-primary btn-block">Sign Sign on</a>
+              </div>
             </div>
           </form>
         </div>
