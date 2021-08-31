@@ -1,7 +1,9 @@
 """
 All views for the trip app are implemented here.
 """
+import logging
 from smtplib import SMTPRecipientsRefused
+
 from django.views.generic import CreateView, UpdateView, DetailView, DeleteView, ListView
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -29,6 +31,7 @@ from .serializers import (
 from .forms import TripForm, ApprovalRequestForm, TripApprovalForm, TripItineraryForm
 from .utils import TripUtilsMixin
 
+logger = logging.getLogger("trip")
 
 # API endpoint views
 class TripViewSet(viewsets.ModelViewSet):
@@ -151,6 +154,7 @@ class TripDetailView(LoginRequiredMixin, UserPassesTestMixin, TripUtilsMixin, De
         trip = self.get_object()
         traveler = trip.traveler
         user = self.request.user
+        logger.debug("--------Checking whether %s should see this view", user)
         return ('view_trip' in get_perms(user, trip) or
                 self.user_is_approver(traveler, security_level=1) or
                 self.user_is_approver(traveler, security_level=2) or
@@ -308,12 +312,12 @@ class TripListView(LoginRequiredMixin, PermissionListMixin, ListView):
     This class implements the listing view for the Trip model.
     """
     model = Trip
-    context_object_name = 'trips'
+    context_object_name = "trips"
     return_403 = True
-    permission_required = 'trip.view_trip'
-    template_name = 'trip/view_trips.html'
+    permission_required = "trip.view_trip"
+    template_name = "trip/view_trips.html"
     extra_context = {
-        'page_title': 'My Trips'
+        "page_title": "My Trips"
     }
 
     def get_queryset(self, *args, **kwargs):
@@ -322,6 +326,7 @@ class TripListView(LoginRequiredMixin, PermissionListMixin, ListView):
         """
         queryset = super().get_queryset(*args, **kwargs)
         queryset.filter(traveler__user_account=self.request.user)
+        logger.error("Obtaining trips for %s", self.request.user)
         return queryset
 
 
